@@ -1,6 +1,7 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Package, User, Hash, FileText, Calendar, MapPin } from 'lucide-react';
 import { Product, Step } from '../types/contract';
+import { IpfsViewer } from './IpfsViewer';
 
 interface ProductDetailsProps {
   productId: string;
@@ -13,13 +14,14 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   product,
   steps,
 }) => {
-  const formatAddress = (address: string) => {
-    return `${address.slice(0, 6)}...${address.slice(-4)}`;
-  };
+  const [showIpfs, setShowIpfs] = useState(false);
 
   const formatTimestamp = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) * 1000);
     return date.toLocaleString('vi-VN');
+  };
+   const formatAddress = (address: string) => {
+    return `${address.slice(0, 6)}...${address.slice(-4)}`;
   };
 
   return (
@@ -62,12 +64,27 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
             </div>
 
             <div>
-              <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-                <FileText className="w-4 h-4" />
-                <span>IPFS Hash</span>
-              </label>
-              <p className="bg-gray-50 px-4 py-2 rounded-lg border font-mono text-sm break-all">{product.ipfsHash}</p>
-            </div>
+  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+    <FileText className="w-4 h-4" />
+    <span>IPFS Hash</span>
+  </label>
+
+  <div className="flex items-center justify-between bg-gray-50 px-4 py-2 rounded-lg border">
+    {/* <p className="font-mono text-sm break-all">{product.ipfsHash}</p> */}
+    <button
+      onClick={() => setShowIpfs(!showIpfs)}
+      className="ml-4 text-blue-600 hover:underline text-sm font-semibold"
+    >
+      {showIpfs ? 'Ẩn nội dung' : 'Xem nội dung'}
+    </button>
+  </div>
+
+  {showIpfs && (
+    <div className="mt-4 border border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
+      <IpfsViewer cid={product.ipfsHash} />
+    </div>
+  )}
+</div>
           </div>
         </div>
 

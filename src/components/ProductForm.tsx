@@ -17,6 +17,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     name: '',
     ipfsHash: '',
   });
+  const [file, setFile] = useState<File | null>(null);
+const [uploading, setUploading] = useState(false);
+
   const [errors, setErrors] = useState<Record<string, string>>({});
 
   const validateForm = () => {
@@ -39,6 +42,38 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
+const handleUploadToPinata = async () => {
+  if (!file) return;
+
+  setUploading(true);
+
+  const formData = new FormData();
+  formData.append('file', file);
+console.log('JWT:', import.meta.env.VITE_PINATA_JWT);
+
+  try {
+    const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      body: formData,
+      headers: {
+        Authorization: `Bearer ${import.meta.env.VITE_PINATA_JWT}`,
+      },
+    });
+
+    const data = await res.json();
+
+    if (res.ok) {
+      setFormData(prev => ({ ...prev, ipfsHash: data.IpfsHash }));
+    } else {
+      console.error('Pinata Error:', data);
+      alert('Upload thất bại, xem console để biết chi tiết.');
+    }
+  } catch (err) {
+    console.error('Upload error:', err);
+  } finally {
+    setUploading(false);
+  }
+};
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
@@ -151,7 +186,23 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             Hash IPFS chứa metadata, hình ảnh và chứng nhận của sản phẩm
           </p>
         </div>
-
+<div className="mt-3">
+  <input
+    type="file"
+    onChange={(e) => setFile(e.target.files?.[0] || null)}
+    className="block w-full text-sm text-gray-500 file:mr-4 file:py-2 file:px-4
+      file:rounded-md file:border-0 file:text-sm file:font-semibold
+      file:bg-blue-50 file:text-blue-700 hover:file:bg-blue-100"
+  />
+  <button
+    type="button"
+    onClick={handleUploadToPinata}
+    disabled={!file || uploading}
+    className="mt-2 bg-green-600 hover:bg-green-700 text-white font-semibold py-2 px-4 rounded-lg disabled:opacity-50"
+  >
+    {uploading ? 'Đang tải lên...' : 'Tải lên và tạo IPFS Hash'}
+  </button>
+</div>
         <button
           type="submit"
           disabled={loading}

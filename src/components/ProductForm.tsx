@@ -49,7 +49,7 @@ const handleUploadToPinata = async () => {
 
   const formData = new FormData();
   formData.append('file', file);
-console.log('JWT:', import.meta.env.VITE_PINATA_JWT);
+
 
   try {
     const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {

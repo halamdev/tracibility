@@ -1,6 +1,10 @@
 import React, { useState } from 'react';
 import { Package, Hash, FileText, Plus } from 'lucide-react';
 
+function generateProductId() {
+  return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
+}
+
 interface ProductFormProps {
   onSubmit: (productId: string, name: string, ipfsHash: string) => Promise<void>;
   loading: boolean;
@@ -13,20 +17,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   isAuthorized,
 }) => {
   const [formData, setFormData] = useState({
-    productId: '',
+    productId: generateProductId(),
     name: '',
     description: '',
     image: null as File | null,
     certificate: null as File | null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
+  const [createdId, setCreatedId] = useState<string | null>(null);
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
-
-    if (!formData.productId.trim()) {
-      newErrors.productId = 'Mã sản phẩm không được để trống';
-    }
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
     }
@@ -50,21 +51,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       };
 
       // Upload files lên IPFS (ví dụ dùng Web3.Storage)
-      // Bạn cần cài web3.storage: npm install web3.storage
       // import { Web3Storage } from 'web3.storage';
-      // const client = new Web3Storage({ token: 'YOUR_TOKEN' });
-
-      // Chuẩn bị mảng file
-      const files: File[] = [];
-      if (formData.image) files.push(new File([formData.image], 'image.jpg'));
-      if (formData.certificate) files.push(new File([formData.certificate], 'certificate.jpg'));
-
-      // Upload files lên IPFS
+      // const client = new Web3Storage({ token: process.env.REACT_APP_WEB3STORAGE_TOKEN });
+      // const files: File[] = [];
+      // if (formData.image) files.push(new File([formData.image], 'image.jpg'));
+      // if (formData.certificate) files.push(new File([formData.certificate], 'certificate.jpg'));
       // const cid = await client.put(files);
       // metadata.image = `ipfs://${cid}/image.jpg`;
       // metadata.certificate = `ipfs://${cid}/certificate.jpg`;
-
-      // Upload metadata JSON lên IPFS
       // const metadataFile = new File([JSON.stringify(metadata)], 'metadata.json');
       // const metadataCid = await client.put([metadataFile]);
       // const ipfsHash = metadataCid;
@@ -73,7 +67,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       const ipfsHash = 'demo-ipfs-hash';
 
       await onSubmit(formData.productId, formData.name, ipfsHash);
-      setFormData({ productId: '', name: '', description: '', image: null, certificate: null });
+      setCreatedId(formData.productId);
+      setFormData({
+        productId: generateProductId(),
+        name: '',
+        description: '',
+        image: null,
+        certificate: null,
+      });
       setErrors({});
     } catch (error) {
       // Error handled by parent component
@@ -114,6 +115,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         <h2 className="text-2xl font-bold text-gray-900">Tạo sản phẩm mới</h2>
       </div>
 
+      {createdId && (
+        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 font-semibold text-center">
+          Sản phẩm đã được tạo thành công! Mã sản phẩm: <span className="font-mono">{createdId}</span>
+        </div>
+      )}
+
       <form onSubmit={handleSubmit} className="space-y-6">
         <div>
           <label htmlFor="productId" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
@@ -125,15 +132,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             id="productId"
             name="productId"
             value={formData.productId}
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-              errors.productId ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Nhập mã sản phẩm duy nhất"
+            readOnly
+            className="w-full px-4 py-3 border rounded-lg bg-gray-100 text-gray-600 font-mono"
           />
-          {errors.productId && (
-            <p className="text-red-500 text-sm mt-1">{errors.productId}</p>
-          )}
         </div>
 
         <div>

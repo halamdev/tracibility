@@ -56,7 +56,7 @@ export const HomePage: React.FC = () => {
           <div className="p-4 bg-gradient-to-br from-blue-600 to-purple-600 rounded-2xl">
             <Package className="w-12 h-12 text-white" />
           </div>
-          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+          <h1 className="text-5xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent leading-[1.4]">
             Traceability System
           </h1>
         </div>

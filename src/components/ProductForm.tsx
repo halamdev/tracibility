@@ -15,7 +15,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   const [formData, setFormData] = useState({
     productId: '',
     name: '',
-    ipfsHash: '',
+    description: '',
+    image: null as File | null,
+    certificate: null as File | null,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -25,40 +27,67 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!formData.productId.trim()) {
       newErrors.productId = 'Mã sản phẩm không được để trống';
     }
-
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
     }
-
-    if (!formData.ipfsHash.trim()) {
-      newErrors.ipfsHash = 'IPFS Hash không được để trống';
-    } else if (formData.ipfsHash.length < 10) {
-      newErrors.ipfsHash = 'IPFS Hash không hợp lệ';
+    if (!formData.certificate) {
+      newErrors.certificate = 'Vui lòng chọn chứng nhận sản phẩm';
     }
-
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
   const handleSubmit = async (e: React.FormEvent) => {
     e.preventDefault();
-
     if (!validateForm()) return;
 
     try {
-      await onSubmit(formData.productId, formData.name, formData.ipfsHash);
-      setFormData({ productId: '', name: '', ipfsHash: '' });
+      // Tạo metadata JSON
+      const metadata: any = {
+        productId: formData.productId,
+        name: formData.name,
+        description: formData.description,
+      };
+
+      // Upload files lên IPFS (ví dụ dùng Web3.Storage)
+      // Bạn cần cài web3.storage: npm install web3.storage
+      // import { Web3Storage } from 'web3.storage';
+      // const client = new Web3Storage({ token: 'YOUR_TOKEN' });
+
+      // Chuẩn bị mảng file
+      const files: File[] = [];
+      if (formData.image) files.push(new File([formData.image], 'image.jpg'));
+      if (formData.certificate) files.push(new File([formData.certificate], 'certificate.jpg'));
+
+      // Upload files lên IPFS
+      // const cid = await client.put(files);
+      // metadata.image = `ipfs://${cid}/image.jpg`;
+      // metadata.certificate = `ipfs://${cid}/certificate.jpg`;
+
+      // Upload metadata JSON lên IPFS
+      // const metadataFile = new File([JSON.stringify(metadata)], 'metadata.json');
+      // const metadataCid = await client.put([metadataFile]);
+      // const ipfsHash = metadataCid;
+
+      // Demo: chỉ gửi metadata JSON (chưa upload thực tế)
+      const ipfsHash = 'demo-ipfs-hash';
+
+      await onSubmit(formData.productId, formData.name, ipfsHash);
+      setFormData({ productId: '', name: '', description: '', image: null, certificate: null });
       setErrors({});
     } catch (error) {
       // Error handled by parent component
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
-    const { name, value } = e.target;
-    setFormData(prev => ({ ...prev, [name]: value }));
-    if (errors[name]) {
-      setErrors(prev => ({ ...prev, [name]: '' }));
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+    const { name, value, type, files } = e.target as any;
+    if (type === 'file') {
+      setFormData(prev => ({ ...prev, [name]: files[0] }));
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
+    } else {
+      setFormData(prev => ({ ...prev, [name]: value }));
+      if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
 
@@ -129,27 +158,58 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
 
         <div>
-          <label htmlFor="ipfsHash" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+          <label htmlFor="description" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <FileText className="w-4 h-4" />
-            <span>IPFS Hash</span>
+            <span>Giới thiệu sản phẩm</span>
           </label>
-          <input
-            type="text"
-            id="ipfsHash"
-            name="ipfsHash"
-            value={formData.ipfsHash}
+          <textarea
+            id="description"
+            name="description"
+            value={formData.description}
             onChange={handleChange}
             className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-              errors.ipfsHash ? 'border-red-500' : 'border-gray-300'
+              errors.description ? 'border-red-500' : 'border-gray-300'
             }`}
-            placeholder="Nhập IPFS hash của metadata"
+            placeholder="Nhập giới thiệu sản phẩm"
+            rows={3}
           />
-          {errors.ipfsHash && (
-            <p className="text-red-500 text-sm mt-1">{errors.ipfsHash}</p>
+        </div>
+
+        <div>
+          <label htmlFor="image" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <FileText className="w-4 h-4" />
+            <span>Hình ảnh sản phẩm</span>
+          </label>
+          <input
+            type="file"
+            id="image"
+            name="image"
+            accept="image/*"
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              errors.image ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+        </div>
+
+        <div>
+          <label htmlFor="certificate" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <FileText className="w-4 h-4" />
+            <span>Chứng nhận sản phẩm</span>
+          </label>
+          <input
+            type="file"
+            id="certificate"
+            name="certificate"
+            accept="image/*,application/pdf"
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              errors.certificate ? 'border-red-500' : 'border-gray-300'
+            }`}
+          />
+          {errors.certificate && (
+            <p className="text-red-500 text-sm mt-1">{errors.certificate}</p>
           )}
-          <p className="text-gray-500 text-sm mt-1">
-            Hash IPFS chứa metadata, hình ảnh và chứng nhận của sản phẩm
-          </p>
         </div>
 
         <button

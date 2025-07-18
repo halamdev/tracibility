@@ -41,6 +41,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     const cleanHash = hash.replace('ipfs://', '');
     return `https://gateway.pinata.cloud/ipfs/${cleanHash}`;
   };
+  
 
   const fetchMetadata = async () => {
     try {
@@ -103,43 +104,91 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   };
 
   const CertificateViewer: React.FC<{ src: string }> = ({ src }) => {
-    const isPdf = src.toLowerCase().includes('.pdf') || src.includes('application/pdf');
+  const [isPdf, setIsPdf] = useState<boolean | null>(null);
+  const [loading, setLoading] = useState(true);
 
+  const url = src.startsWith('http') ? src : getIpfsUrl(src);
+
+  useEffect(() => {
+    const checkFileType = async () => {
+      try {
+        const response = await fetch(url, { method: 'HEAD' });
+        const contentType = response.headers.get('Content-Type');
+        console.log('📄 Content-Type:', contentType);
+        if (contentType?.includes('pdf')) {
+          setIsPdf(true);
+        } 
+        else {
+          setIsPdf(false);
+        }
+      } catch (err) {
+        console.error('Lỗi kiểm tra Content-Type:', err);
+        setIsPdf(false); // fallback nếu lỗi
+      } finally {
+        setLoading(false);
+      }
+    };
+
+    checkFileType();
+  }, [url]);
+
+  if (loading) {
     return (
-      <div className="space-y-4">
-        {isPdf ? (
-          <div className="bg-red-50 border border-red-200 rounded-lg p-6 text-center">
-            <Award className="w-12 h-12 mx-auto text-red-600 mb-3" />
-            <h4 className="font-semibold text-red-800 mb-2">Chứng chỉ PDF</h4>
-            <p className="text-red-700 text-sm mb-4">
-              Nhấp vào nút bên dưới để xem hoặc tải xuống chứng chỉ
-            </p>
-            <div className="flex justify-center space-x-3">
-              <a
-                href={getIpfsUrl(src)}
-                target="_blank"
-                rel="noopener noreferrer"
-                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                <ExternalLink className="w-4 h-4" />
-                <span>Xem PDF</span>
-              </a>
-              <a
-                href={getIpfsUrl(src)}
-                download
-                className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-              >
-                <Download className="w-4 h-4" />
-                <span>Tải xuống</span>
-              </a>
-            </div>
-          </div>
-        ) : (
-          <ImageViewer src={src} alt="Chứng chỉ sản phẩm" />
-        )}
+      <div className="flex justify-center items-center py-8">
+        <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+        <span className="ml-3 text-gray-600">Đang kiểm tra định dạng chứng chỉ...</span>
       </div>
     );
-  };
+  }
+
+  return (
+    <div className="space-y-4">
+      {isPdf ? (
+        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+          <div className="text-center mb-4">
+            <Award className="w-12 h-12 mx-auto text-red-600 mb-3" />
+            <h4 className="font-semibold text-red-800 mb-2">Chứng chỉ PDF</h4>
+            <p className="text-red-700 text-sm">Xem trước chứng chỉ PDF bên dưới hoặc tải xuống</p>
+          </div>
+
+          <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+            <iframe
+              src={url}
+              title="PDF Viewer"
+              width="100%"
+              height="100%"
+              className="w-full h-full"
+            />
+          </div>
+
+          <div className="flex justify-center space-x-3 mt-4">
+            <a
+              href={url}
+              target="_blank"
+              rel="noopener noreferrer"
+              className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <ExternalLink className="w-4 h-4" />
+              <span>Xem PDF trong tab mới</span>
+            </a>
+            <a
+              href={url}
+              download
+              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+            >
+              <Download className="w-4 h-4" />
+              <span>Tải xuống</span>
+            </a>
+          </div>
+        </div>
+      ) : (
+        <ImageViewer src={src} alt="Chứng chỉ sản phẩm" />
+      )}
+    </div>
+  );
+};
+
+
 
   return (
     <div className="space-y-6">

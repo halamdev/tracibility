@@ -2,6 +2,7 @@ import React, { useState, useEffect } from 'react';
 
 interface IpfsViewerProps {
   cid: string;
+   onJsonLoaded?: (json: any) => void;
 }
 
 export const IpfsViewer: React.FC<IpfsViewerProps> = ({ cid }) => {

@@ -2,19 +2,20 @@ import React, { useState } from 'react';
 import { Package, User, Hash, FileText, Calendar, MapPin } from 'lucide-react';
 import { Product, Step } from '../types/contract';
 import { IpfsViewer } from './IpfsViewer';
+import MetadataCard from "./MetadataCard"; 
 
 interface ProductDetailsProps {
   productId: string;
   product: Product;
   steps: Step[];
 }
-
 export const ProductDetails: React.FC<ProductDetailsProps> = ({
   productId,
   product,
   steps,
 }) => {
   const [showIpfs, setShowIpfs] = useState(false);
+const [jsonMetadata, setJsonMetadata] = useState<any | null>(null);
 
   const formatTimestamp = (timestamp: bigint) => {
     const date = new Date(Number(timestamp) * 1000);
@@ -80,10 +81,14 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   </div>
 
   {showIpfs && (
-    <div className="mt-4 border border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
-      <IpfsViewer cid={product.ipfsHash} />
-    </div>
-  )}
+  <div className="mt-4 border border-dashed border-blue-300 rounded-lg p-4 bg-blue-50">
+    {jsonMetadata ? (
+      <MetadataCard metadata={jsonMetadata} />
+    ) : (
+      <IpfsViewer cid={product.ipfsHash} onJsonLoaded={setJsonMetadata} />
+    )}
+  </div>
+)}
 </div>
           </div>
         </div>

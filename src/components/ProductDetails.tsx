@@ -103,17 +103,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   };
 
   const CertificateViewer: React.FC<{ src: string }> = ({ src }) => {
-    const [certError, setCertError] = useState(false);
     const isPdf = src.toLowerCase().includes('.pdf') || src.includes('application/pdf');
-
-    if (certError) {
-      return (
-        <div className="bg-gray-100 rounded-lg p-8 text-center">
-          <Award className="w-12 h-12 mx-auto text-gray-400 mb-2" />
-          <p className="text-gray-500">Không thể tải chứng chỉ</p>
-        </div>
-      );
-    }
 
     return (
       <div className="space-y-4">

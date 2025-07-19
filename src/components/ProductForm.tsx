@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Hash, FileText, Plus } from 'lucide-react';
+import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle } from 'lucide-react';
 
 function generateProductId() {
   return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -25,61 +25,130 @@ export const ProductForm: React.FC<ProductFormProps> = ({
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
   const [createdId, setCreatedId] = useState<string | null>(null);
+  const [uploadProgress, setUploadProgress] = useState<{
+    image?: 'uploading' | 'success' | 'error';
+    certificate?: 'uploading' | 'success' | 'error';
+    metadata?: 'uploading' | 'success' | 'error';
+  }>({});
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
     }
-    if (!formData.certificate) {
-      newErrors.certificate = 'Vui lòng chọn chứng nhận sản phẩm';
-    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    if (!validateForm()) return;
+ const handleSubmit = async (e: React.FormEvent) => {
+  e.preventDefault();
+  if (!validateForm()) return;
 
-    try {
-      // Tạo metadata JSON
-      const metadata: any = {
-        productId: formData.productId,
-        name: formData.name,
-        description: formData.description,
-      };
+  try {
+    setErrors({});
+    setCreatedId(null);
+    setUploadProgress({});
 
-      // Upload files lên IPFS (ví dụ dùng Web3.Storage)
-      // import { Web3Storage } from 'web3.storage';
-      // const client = new Web3Storage({ token: process.env.REACT_APP_WEB3STORAGE_TOKEN });
-      // const files: File[] = [];
-      // if (formData.image) files.push(new File([formData.image], 'image.jpg'));
-      // if (formData.certificate) files.push(new File([formData.certificate], 'certificate.jpg'));
-      // const cid = await client.put(files);
-      // metadata.image = `ipfs://${cid}/image.jpg`;
-      // metadata.certificate = `ipfs://${cid}/certificate.jpg`;
-      // const metadataFile = new File([JSON.stringify(metadata)], 'metadata.json');
-      // const metadataCid = await client.put([metadataFile]);
-      // const ipfsHash = metadataCid;
+    const token = import.meta.env.VITE_PINATA_JWT;
 
-      // Demo: chỉ gửi metadata JSON (chưa upload thực tế)
-      const ipfsHash = 'demo-ipfs-hash';
+    // 1. Upload image lên Pinata (nếu có)
+    let imageHash: string | null = null;
+    if (formData.image) {
+      setUploadProgress(prev => ({ ...prev, image: 'uploading' }));
+      const imgForm = new FormData();
+      imgForm.append('file', formData.image);
 
-      await onSubmit(formData.productId, formData.name, ipfsHash);
-      setCreatedId(formData.productId);
-      setFormData({
-        productId: generateProductId(),
-        name: '',
-        description: '',
-        image: null,
-        certificate: null,
+      const res = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+        method: 'POST',
+        body: imgForm,
+        headers: {
+          Authorization: `Bearer ${token}`,
+        },
       });
-      setErrors({});
-    } catch (error) {
-      // Error handled by parent component
+
+      const data = await res.json();
+
+      if (!res.ok) {
+        throw new Error('Lỗi upload hình ảnh lên IPFS');
+      }
+
+      imageHash = data.IpfsHash;
+      setUploadProgress(prev => ({ ...prev, image: 'success' }));
     }
-  };
+
+    // 2. Upload certificate lên Pinata
+    setUploadProgress(prev => ({ ...prev, certificate: 'uploading' }));
+    const certForm = new FormData();
+    certForm.append('file', formData.certificate!);
+
+    const certRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      body: certForm,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const certData = await certRes.json();
+
+    if (!certRes.ok) {
+      throw new Error('Lỗi upload chứng nhận lên IPFS');
+    }
+
+    const certHash = certData.IpfsHash;
+    setUploadProgress(prev => ({ ...prev, certificate: 'success' }));
+
+    // 3. Tạo metadata object
+    const metadata = {
+      productId: formData.productId,
+      name: formData.name,
+      description: formData.description,
+      image: imageHash ? `ipfs://${imageHash}` : null,
+      certificate: `ipfs://${certHash}`,
+      createdAt: new Date().toISOString(),
+    };
+
+
+    // 4. Upload metadata.json lên Pinata
+    setUploadProgress(prev => ({ ...prev, metadata: 'uploading' }));
+    const metadataForm = new FormData();
+    const blob = new Blob([JSON.stringify(metadata)], { type: 'application/json' });
+    metadataForm.append('file', blob, 'metadata.json');
+
+    const metadataRes = await fetch('https://api.pinata.cloud/pinning/pinFileToIPFS', {
+      method: 'POST',
+      body: metadataForm,
+      headers: {
+        Authorization: `Bearer ${token}`,
+      },
+    });
+
+    const metadataJson = await metadataRes.json();
+
+    if (!metadataRes.ok) {
+      throw new Error('Lỗi upload metadata lên IPFS');
+    }
+
+    const ipfsHash = metadataJson.IpfsHash;
+    setUploadProgress(prev => ({ ...prev, metadata: 'success' }));
+
+    // 5. Gọi smart contract qua onSubmit prop
+    await onSubmit(formData.productId, formData.name, ipfsHash);
+
+    setCreatedId(formData.productId);
+    setFormData({
+      productId: generateProductId(),
+      name: '',
+      description: '',
+      image: null,
+      certificate: null,
+    });
+    setUploadProgress({});
+  } catch (error: any) {
+    setErrors({ submit: error.message || 'Đã có lỗi xảy ra khi tạo sản phẩm' });
+    setUploadProgress({});
+  }
+};
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
     const { name, value, type, files } = e.target as any;
@@ -91,6 +160,101 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       if (errors[name]) setErrors(prev => ({ ...prev, [name]: '' }));
     }
   };
+
+  const removeFile = (fieldName: 'image' | 'certificate') => {
+    setFormData(prev => ({ ...prev, [fieldName]: null }));
+    if (errors[fieldName]) setErrors(prev => ({ ...prev, [fieldName]: '' }));
+  };
+
+  const FileUploadBox: React.FC<{
+    name: 'image' | 'certificate';
+    label: string;
+    icon: React.ComponentType<any>;
+    accept: string;
+    file: File | null;
+    required?: boolean;
+    uploadStatus?: 'uploading' | 'success' | 'error';
+  }> = ({ name, label, icon: Icon, accept, file, required, uploadStatus }) => (
+    <div>
+      <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+        <Icon className="w-4 h-4" />
+        <span>{label}</span>
+        {required && <span className="text-red-500">*</span>}
+      </label>
+      
+      {!file ? (
+        <label className={`relative block w-full border-2 border-dashed rounded-lg p-6 text-center cursor-pointer transition-colors ${
+          errors[name] ? 'border-red-300 bg-red-50' : 'border-gray-300 hover:border-blue-400 hover:bg-blue-50'
+        }`}>
+          <input
+            type="file"
+            name={name}
+            accept={accept}
+            onChange={handleChange}
+            className="absolute inset-0 w-full h-full opacity-0 cursor-pointer"
+          />
+          <div className="space-y-2">
+            <Upload className="w-8 h-8 mx-auto text-gray-400" />
+            <div className="text-sm text-gray-600">
+              <span className="font-medium text-blue-600">Nhấp để chọn file</span>
+              <span> hoặc kéo thả vào đây</span>
+            </div>
+            <p className="text-xs text-gray-500">
+              {accept.includes('image') ? 'PNG, JPG, GIF tối đa 10MB' : 'PDF, PNG, JPG tối đa 10MB'}
+            </p>
+          </div>
+        </label>
+      ) : (
+        <div className={`relative border-2 rounded-lg p-4 ${
+          uploadStatus === 'success' ? 'border-green-300 bg-green-50' :
+          uploadStatus === 'uploading' ? 'border-blue-300 bg-blue-50' :
+          uploadStatus === 'error' ? 'border-red-300 bg-red-50' :
+          'border-gray-300 bg-gray-50'
+        }`}>
+          <div className="flex items-center justify-between">
+            <div className="flex items-center space-x-3">
+              <div className={`p-2 rounded-lg ${
+                uploadStatus === 'success' ? 'bg-green-100' :
+                uploadStatus === 'uploading' ? 'bg-blue-100' :
+                uploadStatus === 'error' ? 'bg-red-100' :
+                'bg-gray-100'
+              }`}>
+                {uploadStatus === 'success' ? (
+                  <CheckCircle className="w-5 h-5 text-green-600" />
+                ) : uploadStatus === 'uploading' ? (
+                  <div className="w-5 h-5 border-2 border-blue-600 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <Icon className="w-5 h-5 text-gray-600" />
+                )}
+              </div>
+              <div>
+                <p className="font-medium text-gray-900 truncate max-w-xs">{file.name}</p>
+                <p className="text-sm text-gray-500">
+                  {(file.size / 1024 / 1024).toFixed(2)} MB
+                  {uploadStatus === 'uploading' && ' - Đang upload...'}
+                  {uploadStatus === 'success' && ' - Upload thành công'}
+                  {uploadStatus === 'error' && ' - Upload thất bại'}
+                </p>
+              </div>
+            </div>
+            {uploadStatus !== 'uploading' && (
+              <button
+                type="button"
+                onClick={() => removeFile(name)}
+                className="p-1 text-gray-400 hover:text-red-500 transition-colors"
+              >
+                <X className="w-5 h-5" />
+              </button>
+            )}
+          </div>
+        </div>
+      )}
+      
+      {errors[name] && (
+        <p className="text-red-500 text-sm mt-1">{errors[name]}</p>
+      )}
+    </div>
+  );
 
   if (!isAuthorized) {
     return (
@@ -116,8 +280,20 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       </div>
 
       {createdId && (
-        <div className="mb-4 p-4 bg-green-50 border border-green-200 rounded-lg text-green-800 font-semibold text-center">
-          Sản phẩm đã được tạo thành công! Mã sản phẩm: <span className="font-mono">{createdId}</span>
+        <div className="mb-6 p-4 bg-green-50 border border-green-200 rounded-lg">
+          <div className="flex items-center space-x-2 text-green-800 mb-2">
+            <CheckCircle className="w-5 h-5" />
+            <span className="font-semibold">Sản phẩm đã được tạo thành công!</span>
+          </div>
+          <p className="text-green-700">
+            Mã sản phẩm: <span className="font-mono font-semibold">{createdId}</span>
+          </p>
+        </div>
+      )}
+
+      {errors.submit && (
+        <div className="mb-6 p-4 bg-red-50 border border-red-200 rounded-lg">
+          <p className="text-red-800 font-semibold">{errors.submit}</p>
         </div>
       )}
 
@@ -141,6 +317,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <label htmlFor="name" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <Package className="w-4 h-4" />
             <span>Tên sản phẩm</span>
+            <span className="text-red-500">*</span>
           </label>
           <input
             type="text"
@@ -161,65 +338,60 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         <div>
           <label htmlFor="description" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <FileText className="w-4 h-4" />
-            <span>Giới thiệu sản phẩm</span>
+            <span>Mô tả sản phẩm</span>
           </label>
           <textarea
             id="description"
             name="description"
             value={formData.description}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-              errors.description ? 'border-red-500' : 'border-gray-300'
-            }`}
-            placeholder="Nhập giới thiệu sản phẩm"
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all resize-none"
+            placeholder="Nhập mô tả chi tiết về sản phẩm"
             rows={3}
           />
         </div>
 
-        <div>
-          <label htmlFor="image" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-            <FileText className="w-4 h-4" />
-            <span>Hình ảnh sản phẩm</span>
-          </label>
-          <input
-            type="file"
-            id="image"
+        <div className="flex flex-col gap-6">
+          <FileUploadBox
             name="image"
+            label="Hình ảnh sản phẩm"
+            icon={Image}
             accept="image/*"
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-              errors.image ? 'border-red-500' : 'border-gray-300'
-            }`}
+            file={formData.image}
+            uploadStatus={uploadProgress.image}
           />
-        </div>
 
-        <div>
-          <label htmlFor="certificate" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-            <FileText className="w-4 h-4" />
-            <span>Chứng nhận sản phẩm</span>
-          </label>
-          <input
-            type="file"
-            id="certificate"
+          <FileUploadBox
             name="certificate"
+            label="Chứng nhận sản phẩm"
+            icon={Award}
             accept="image/*,application/pdf"
-            onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
-              errors.certificate ? 'border-red-500' : 'border-gray-300'
-            }`}
+            file={formData.certificate}
+            uploadStatus={uploadProgress.certificate}
           />
-          {errors.certificate && (
-            <p className="text-red-500 text-sm mt-1">{errors.certificate}</p>
-          )}
         </div>
 
         <button
           type="submit"
-          disabled={loading}
+          disabled={loading || Object.values(uploadProgress).includes('uploading')}
           className="w-full bg-blue-600 hover:bg-blue-700 text-white font-semibold py-3 px-6 rounded-lg transition-colors disabled:opacity-50 disabled:cursor-not-allowed flex items-center justify-center space-x-2"
         >
-          <Plus className="w-5 h-5" />
-          <span>{loading ? 'Đang tạo...' : 'Tạo sản phẩm'}</span>
+          {Object.values(uploadProgress).includes('uploading') ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Đang upload...</span>
+            </>
+          ) : loading ? (
+            <>
+              <div className="w-5 h-5 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              <span>Đang tạo...</span>
+            </>
+          ) : (
+            <>
+              <Plus className="w-5 h-5" />
+              <span>Tạo sản phẩm</span>
+            </>
+          )}
         </button>
       </form>
     </div>

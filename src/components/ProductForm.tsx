@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle } from 'lucide-react';
+import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle, MapPin } from 'lucide-react';
 
 function generateProductId() {
   return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();

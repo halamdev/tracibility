@@ -43,8 +43,6 @@ export const CreatePage: React.FC = () => {
     );
   }
 
-  const handleCreateProduct = async (productId: string, name: string, ipfsHash: string) => {
-  }
   const handleCreateProduct = async (productId: string, name: string, ipfsHash: string, location: string) => {
     const result = await createProduct(productId, name, ipfsHash, location);
     if (result) {

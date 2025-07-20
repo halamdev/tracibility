@@ -55,99 +55,130 @@ export const useContract = () => {
   };
 
   const connectWallet = useCallback(async () => {
-    if (!window.ethereum) {
-      const msg = 'MetaMask không được tìm thấy. Vui lòng cài đặt MetaMask.';
+  if (!window.ethereum) {
+    const msg = "MetaMask không được tìm thấy. Vui lòng cài đặt MetaMask.";
+    setError(msg);
+    toast.error(msg);
+    return;
+  }
+
+  try {
+    setLoading(true);
+    setError(null);
+
+    const contractExists = await debugContract();
+    if (!contractExists) {
+      const msg =
+        "Smart contract không tồn tại tại địa chỉ này hoặc bạn đang ở sai network. Vui lòng kiểm tra lại.";
       setError(msg);
       toast.error(msg);
       return;
     }
 
-    try {
-      setLoading(true);
-      setError(null);
+    const accounts = await window.ethereum.request({
+      method: "eth_requestAccounts",
+    });
 
-      // Debug contract first
-      const contractExists = await debugContract();
-      if (!contractExists) {
-        const msg = 'Smart contract không tồn tại tại địa chỉ này hoặc bạn đang ở sai network. Vui lòng kiểm tra lại.';
+    if (accounts.length > 0) {
+      const address = accounts[0];
+
+      // GỌI BACKEND ĐỂ CHECK VÍ HỢP LỆ
+      const token = localStorage.getItem("token");
+      const res = await fetch("http://localhost:8090/api/users/auth/wallet-verify", {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${token}`,
+        },
+        body: JSON.stringify({ wallet: address }),
+      });
+
+      const result = await res.json();
+      if (!res.ok || !result.success) {
+        const msg =
+          result.error || "Ví của bạn không khớp với tài khoản hiện tại.";
         setError(msg);
         toast.error(msg);
-        setLoading(false);
         return;
       }
 
-      const accounts = await window.ethereum.request({
-        method: 'eth_requestAccounts',
-      });
+      // Nếu đúng ví, tiếp tục
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const network = await provider.getNetwork();
+      console.log(
+        "Connected to network:",
+        network.name,
+        "Chain ID:",
+        network.chainId
+      );
 
-      if (accounts.length > 0) {
-        const provider = new ethers.BrowserProvider(window.ethereum);
-        
-        // Kiểm tra network
-        const network = await provider.getNetwork();
-        console.log('Connected to network:', network.name, 'Chain ID:', network.chainId);
-        
-        const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
-        
-        const address = accounts[0];
-        
-        let isAuthorized = false;
-        let isOwner = false;
-        
-        try {
-          // Kiểm tra xem contract có tồn tại không
-          const code = await provider.getCode(CONTRACT_ADDRESS);
-          if (code === '0x') {
-            throw new Error('Smart contract không tồn tại tại địa chỉ này');
-          }
-          
-          // Thử gọi các hàm contract với timeout
-          const [authResult, ownerResult] = await Promise.allSettled([
-            Promise.race([
-              contract.isAuthorized(address),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
-            ]),
-            Promise.race([
-              contract.owner(),
-              new Promise((_, reject) => setTimeout(() => reject(new Error('Timeout')), 10000))
-            ])
-          ]);
-          
-          if (authResult.status === 'fulfilled') {
-            isAuthorized = authResult.value;
-          } else {
-            console.warn('Không thể kiểm tra quyền:', authResult.reason);
-          }
-          
-          if (ownerResult.status === 'fulfilled') {
-            isOwner = address.toLowerCase() === ownerResult.value.toLowerCase();
-          } else {
-            console.warn('Không thể kiểm tra owner:', ownerResult.reason);
-          }
-          
-        } catch (contractError: any) {
-          console.error('Lỗi khi gọi contract:', contractError);
-          const msg = `Lỗi kết nối contract: ${contractError.message}`;
-          setError(msg);
-          toast.error(msg);
+      const contract = new ethers.Contract(
+        CONTRACT_ADDRESS,
+        CONTRACT_ABI,
+        provider
+      );
+
+      let isAuthorized = false;
+      let isOwner = false;
+
+      try {
+        const code = await provider.getCode(CONTRACT_ADDRESS);
+        if (code === "0x") {
+          throw new Error("Smart contract không tồn tại tại địa chỉ này");
         }
 
-        setWalletState({
-          address,
-          isConnected: true,
-          isAuthorized,
-          isOwner,
-        });
+        const [authResult, ownerResult] = await Promise.allSettled([
+          Promise.race([
+            contract.isAuthorized(address),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Timeout")), 10000)
+            ),
+          ]),
+          Promise.race([
+            contract.owner(),
+            new Promise((_, reject) =>
+              setTimeout(() => reject(new Error("Timeout")), 10000)
+            ),
+          ]),
+        ]);
+
+        if (authResult.status === "fulfilled") {
+          isAuthorized = authResult.value;
+        } else {
+          console.warn("Không thể kiểm tra quyền:", authResult.reason);
+        }
+
+        if (ownerResult.status === "fulfilled") {
+          isOwner =
+            address.toLowerCase() === ownerResult.value.toLowerCase();
+        } else {
+          console.warn("Không thể kiểm tra owner:", ownerResult.reason);
+        }
+      } catch (contractError: any) {
+        console.error("Lỗi khi gọi contract:", contractError);
+        const msg = `Lỗi kết nối contract: ${contractError.message}`;
+        setError(msg);
+        toast.error(msg);
+        return;
       }
-    } catch (err: any) {
-      console.error('Lỗi kết nối ví:', err);
-      const msg = err.message || 'Lỗi kết nối ví. Vui lòng thử lại.';
-      setError(msg);
-      toast.error(msg);
-    } finally {
-      setLoading(false);
+
+      setWalletState({
+        address,
+        isConnected: true,
+        isAuthorized,
+        isOwner,
+      });
     }
-  }, []);
+  } catch (err: any) {
+    console.error("Lỗi kết nối ví:", err);
+    const msg = err.message || "Lỗi kết nối ví. Vui lòng thử lại.";
+    setError(msg);
+    toast.error(msg);
+  } finally {
+    setLoading(false);
+  }
+}, []);
+
 
   const disconnectWallet = useCallback(() => {
     setWalletState({

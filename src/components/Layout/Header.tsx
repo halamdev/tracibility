@@ -1,5 +1,5 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation } from 'react-router-dom';
+import { Link, useLocation, useNavigate  } from 'react-router-dom';
 import { Package, Home, Search, Plus, Settings, List,  LogOut, LogIn } from 'lucide-react';
 import { WalletConnection } from '../WalletConnection';
 import { NetworkInfo } from '../NetworkInfo';

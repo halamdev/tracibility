@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
 import { Link, useLocation, useNavigate  } from 'react-router-dom';
-import { Package, Home, Search, Plus, Settings, List,  LogOut, LogIn } from 'lucide-react';
+import { Package, Home, Search, Plus, Settings,  LogOut, LogIn } from 'lucide-react';
 import { WalletConnection } from '../WalletConnection';
 import { NetworkInfo } from '../NetworkInfo';
 import { useContractContext } from '../../contexts/ContractContext';
@@ -25,7 +25,7 @@ export const Header: React.FC = () => {
   const handleLogout = () => {
     localStorage.removeItem("token");
     setIsLoggedIn(false);
-    navigate("/login");
+    navigate("/");
   };
 
   const navItems = [

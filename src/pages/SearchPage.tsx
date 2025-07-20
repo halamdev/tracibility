@@ -1,10 +1,14 @@
 import React, { useState } from 'react';
+import { useSearchParams } from 'react-router-dom';
 import { ProductSearch, ProductDetails, AddStepForm } from '../components';
 import { toast } from 'react-toastify';
 import { useContractContext } from '../contexts/ContractContext';
 import { Product, Step } from '../types/contract';
 
 export const SearchPage: React.FC = () => {
+  const [searchParams] = useSearchParams();
+  const productIdFromUrl = searchParams.get('id');
+  
   const {
     walletState,
     loading,
@@ -22,6 +26,13 @@ export const SearchPage: React.FC = () => {
   } | null>(null);
   // const [success, setSuccess] = useState<string | null>(null);
   const [searchLoading, setSearchLoading] = useState(false);
+
+  // Auto search if product ID is in URL
+  React.useEffect(() => {
+    if (productIdFromUrl && !currentProduct) {
+      handleSearch(productIdFromUrl);
+    }
+  }, [productIdFromUrl]);
 
   const handleSearch = async (productId: string) => {
     try {
@@ -46,8 +57,8 @@ export const SearchPage: React.FC = () => {
     }
   };
 
-  const handleAddStep = async (productId: string, location: string, description: string) => {
-    const result = await addStep(productId, location, description);
+  const handleAddStep = async (productId: string, location: string, description: string, stepStatus: number) => {
+    const result = await addStep(productId, location, description, stepStatus);
     if (result && currentProduct && currentProduct.id === productId) {
       // Refresh current product steps
       const updatedSteps = await getSteps(productId);

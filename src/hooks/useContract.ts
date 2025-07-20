@@ -2,7 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { toast } from 'react-toastify';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../constants/contract';
-import { WalletState, Product, Step } from '../types/contract';
+import { WalletState, Product, Step, ProductStatus } from '../types/contract';
 
 declare global {
   interface Window {
@@ -189,7 +189,7 @@ export const useContract = () => {
     });
   }, []);
 
-  const createProduct = useCallback(async (productId: string, name: string, ipfsHash: string) => {
+  const createProduct = useCallback(async (productId: string, name: string, ipfsHash: string, location: string) => {
     if (!walletState.isConnected || !walletState.isAuthorized) {
       toast.error('Bạn không có quyền tạo sản phẩm');
       throw new Error('Bạn không có quyền tạo sản phẩm');
@@ -217,7 +217,7 @@ export const useContract = () => {
         }
       }
 
-      const tx = await contract.createProduct(productId, name, ipfsHash);
+      const tx = await contract.createProduct(productId, name, ipfsHash, location, ProductStatus.Created);
       await tx.wait();
 
       return tx;
@@ -245,7 +245,7 @@ export const useContract = () => {
     }
   }, [walletState]);
 
-  const addStep = useCallback(async (productId: string, location: string, description: string) => {
+  const addStep = useCallback(async (productId: string, location: string, description: string, stepStatus: number) => {
     if (!walletState.isConnected || !walletState.isAuthorized) {
       toast.error('Bạn không có quyền thêm bước truy xuất');
       throw new Error('Bạn không có quyền thêm bước truy xuất');
@@ -272,7 +272,7 @@ export const useContract = () => {
         console.warn('Không thể kiểm tra sản phẩm:', checkError);
       }
 
-      const tx = await contract.addStep(productId, location, description);
+      const tx = await contract.addStep(productId, location, description, stepStatus);
       await tx.wait();
 
       return tx;
@@ -322,8 +322,8 @@ export const useContract = () => {
           return null;
         }
 
-        const [name, ipfsHash, creator, stepCount] = await contract.getProduct(productId);
-        return { name, ipfsHash, creator, stepCount };
+        const [name, ipfsHash, creator, status, steps, location] = await contract.getProduct(productId);
+        return { name, ipfsHash, creator, status, steps, location };
       } catch (contractError: any) {
         console.error('Lỗi gọi contract getProduct:', contractError);
         if (contractError.message.includes('could not decode result data')) {
@@ -354,6 +354,7 @@ export const useContract = () => {
           description: step.description,
           timestamp: step.timestamp,
           actor: step.actor,
+          status: step.status,
         }));
       } catch (contractError: any) {
         console.error('Lỗi gọi contract getSteps:', contractError);
@@ -373,6 +374,22 @@ export const useContract = () => {
     }
   }, []);
 
+  const getProductsByCreator = useCallback(async (creatorAddress: string): Promise<string[]> => {
+    try {
+      setError(null);
+
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+
+      const productIds = await contract.getProductsByCreator(creatorAddress);
+      return productIds;
+    } catch (err: any) {
+      console.error('Lỗi getProductsByCreator:', err);
+      const errorMessage = err.message || 'Lỗi lấy danh sách sản phẩm';
+      setError(errorMessage);
+      throw new Error(errorMessage);
+    }
+  }, []);
   const authorizeUser = useCallback(async (userAddress: string) => {
     if (!walletState.isOwner) {
       toast.error('Chỉ chủ hợp đồng mới có thể cấp quyền');
@@ -462,6 +479,7 @@ export const useContract = () => {
     addStep,
     getProduct,
     getSteps,
+    getProductsByCreator,
     authorizeUser,
     revokeUser,
     clearError: () => setError(null),

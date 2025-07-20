@@ -5,6 +5,7 @@ import { HomePage } from './pages/HomePage';
 import { SearchPage } from './pages/SearchPage';
 import { CreatePage } from './pages/CreatePage';
 import { AdminPage } from './pages/AdminPage';
+import { ProductsPage } from './pages/ProductsPage';
 import { LoginPage } from './pages/LoginPage';
 
 function App() {
@@ -19,6 +20,7 @@ function App() {
             <Route path="search" element={<SearchPage />} />
             <Route path="create" element={<CreatePage />} />
             <Route path="admin" element={<AdminPage />} />
+            <Route path="products" element={<ProductsPage />} />
           </Route>
         </Routes>
       </Router>

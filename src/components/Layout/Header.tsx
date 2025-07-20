@@ -1,9 +1,9 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate } from "react-router-dom";
-import { Package, Home, Search, Plus, Settings, LogOut, LogIn } from "lucide-react";
-import { WalletConnection } from "../WalletConnection";
-import { NetworkInfo } from "../NetworkInfo";
-import { useContractContext } from "../../contexts/ContractContext";
+import { Link, useLocation } from 'react-router-dom';
+import { Package, Home, Search, Plus, Settings, List,  LogOut, LogIn } from 'lucide-react';
+import { WalletConnection } from '../WalletConnection';
+import { NetworkInfo } from '../NetworkInfo';
+import { useContractContext } from '../../contexts/ContractContext';
 
 export const Header: React.FC = () => {
   const navigate = useNavigate();
@@ -29,7 +29,7 @@ export const Header: React.FC = () => {
   };
 
   const navItems = [
-    { path: "/", label: "Trang chủ", icon: Home },
+        { path: "/", label: "Trang chủ", icon: Home },
     { path: "/search", label: "Tra cứu", icon: Search },
     ...(isLoggedIn
       ? [

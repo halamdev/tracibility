@@ -1,12 +1,12 @@
 import React, { useState } from 'react';
-import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle } from 'lucide-react';
+import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle, MapPin } from 'lucide-react';
 
 function generateProductId() {
   return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
 
 interface ProductFormProps {
-  onSubmit: (productId: string, name: string, ipfsHash: string) => Promise<void>;
+  onSubmit: (productId: string, name: string, ipfsHash: string, location: string) => Promise<void>;
   loading: boolean;
   isAuthorized: boolean;
 }
@@ -20,6 +20,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     productId: generateProductId(),
     name: '',
     description: '',
+    location: '',
     image: null as File | null,
     certificate: null as File | null,
   });
@@ -35,6 +36,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
+    }
+    if (!formData.location.trim()) {
+      newErrors.location = 'Địa điểm không được để trống';
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
@@ -103,6 +107,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       productId: formData.productId,
       name: formData.name,
       description: formData.description,
+      location: formData.location,
       image: imageHash ? `ipfs://${imageHash}` : null,
       certificate: `ipfs://${certHash}`,
       createdAt: new Date().toISOString(),
@@ -133,13 +138,14 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setUploadProgress(prev => ({ ...prev, metadata: 'success' }));
 
     // 5. Gọi smart contract qua onSubmit prop
-    await onSubmit(formData.productId, formData.name, ipfsHash);
+    await onSubmit(formData.productId, formData.name, ipfsHash, formData.location);
 
     setCreatedId(formData.productId);
     setFormData({
       productId: generateProductId(),
       name: '',
       description: '',
+      location: '',
       image: null,
       certificate: null,
     });
@@ -335,6 +341,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           )}
         </div>
 
+        <div>
+          <label htmlFor="location" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <MapPin className="w-4 h-4" />
+            <span>Địa điểm sản xuất</span>
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              errors.location ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Nhập địa điểm sản xuất"
+          />
+          {errors.location && (
+            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+          )}
+        </div>
         <div>
           <label htmlFor="description" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <FileText className="w-4 h-4" />

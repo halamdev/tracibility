@@ -3,6 +3,7 @@ export * from './AddStepForm';
 export * from './ProductDetails';
 export * from './ProductForm';
 export * from './ProductSearch';
+export * from './ProductList';
 export * from './NetworkInfo';
 export * from './WalletConnection';
 export * from './Layout/Layout';

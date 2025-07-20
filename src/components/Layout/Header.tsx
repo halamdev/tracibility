@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link, useLocation } from 'react-router-dom';
-import { Package, Home, Search, Plus, Settings } from 'lucide-react';
+import { Package, Home, Search, Plus, Settings, List } from 'lucide-react';
 import { WalletConnection } from '../WalletConnection';
 import { NetworkInfo } from '../NetworkInfo';
 import { useContractContext } from '../../contexts/ContractContext';
@@ -17,6 +17,7 @@ export const Header: React.FC = () => {
   const navItems = [
     { path: '/', label: 'Trang chủ', icon: Home },
     { path: '/search', label: 'Tra cứu', icon: Search },
+    { path: '/products', label: 'Sản phẩm', icon: List },
     { path: '/create', label: 'Tạo sản phẩm', icon: Plus },
     { path: '/admin', label: 'Quản lý', icon: Settings },
   ];

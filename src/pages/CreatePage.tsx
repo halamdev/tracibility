@@ -43,8 +43,8 @@ export const CreatePage: React.FC = () => {
     );
   }
 
-  const handleCreateProduct = async (productId: string, name: string, ipfsHash: string) => {
-    const result = await createProduct(productId, name, ipfsHash);
+  const handleCreateProduct = async (productId: string, name: string, ipfsHash: string, status:number, location: string) => {
+    const result = await createProduct(productId, name, ipfsHash,location,status, );
     if (result) {
       toast.success('Sản phẩm đã được tạo thành công!');
     }

@@ -46,8 +46,8 @@ export const SearchPage: React.FC = () => {
     }
   };
 
-  const handleAddStep = async (productId: string, location: string, description: string) => {
-    const result = await addStep(productId, location, description);
+  const handleAddStep = async (productId: string, location: string, description: string, status:number) => {
+    const result = await addStep(productId, location, description, status);
     if (result && currentProduct && currentProduct.id === productId) {
       // Refresh current product steps
       const updatedSteps = await getSteps(productId);

@@ -8,8 +8,8 @@ interface ContractContextType {
   error: string | null;
   connectWallet: () => Promise<void>;
   disconnectWallet: () => void;
-  createProduct: (productId: string, name: string, ipfsHash: string) => Promise<any>;
-  addStep: (productId: string, location: string, description: string) => Promise<any>;
+  createProduct: (productId: string, name: string, ipfsHash: string, location: string, status: number) => Promise<any>;
+  addStep: (productId: string, location: string, description: string, status: number) => Promise<any>;
   getProduct: (productId: string) => Promise<Product | null>;
   getSteps: (productId: string) => Promise<Step[]>;
   authorizeUser: (address: string) => Promise<any>;

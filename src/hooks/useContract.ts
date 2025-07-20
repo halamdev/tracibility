@@ -158,7 +158,8 @@ export const useContract = () => {
     });
   }, []);
 
-  const createProduct = useCallback(async (productId: string, name: string, ipfsHash: string) => {
+  const createProduct = useCallback(
+  async (productId: string, name: string, ipfsHash: string, location: string, status: number) => {
     if (!walletState.isConnected || !walletState.isAuthorized) {
       toast.error('Bạn không có quyền tạo sản phẩm');
       throw new Error('Bạn không có quyền tạo sản phẩm');
@@ -172,7 +173,7 @@ export const useContract = () => {
       const signer = await provider.getSigner();
       const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, signer);
 
-      // Kiểm tra xem sản phẩm đã tồn tại chưa
+      // Kiểm tra sản phẩm đã tồn tại chưa
       try {
         const exists = await contract.isProductExists(productId);
         if (exists) {
@@ -186,14 +187,14 @@ export const useContract = () => {
         }
       }
 
-      const tx = await contract.createProduct(productId, name, ipfsHash);
+      const tx = await contract.createProduct(productId, name, ipfsHash, location, status);
       await tx.wait();
 
       return tx;
     } catch (err: any) {
       console.error('Lỗi tạo sản phẩm:', err);
       let errorMessage = 'Lỗi tạo sản phẩm';
-      
+
       if (err.reason) {
         errorMessage = err.reason;
       } else if (err.message) {
@@ -205,16 +206,17 @@ export const useContract = () => {
           errorMessage = err.message;
         }
       }
-      
+
       setError(errorMessage);
       toast.error(errorMessage);
       throw new Error(errorMessage);
     } finally {
       setLoading(false);
     }
-  }, [walletState]);
-
-  const addStep = useCallback(async (productId: string, location: string, description: string) => {
+  },
+  [walletState]
+);
+  const addStep = useCallback(async (productId: string, location: string, description: string, status: number) => {
     if (!walletState.isConnected || !walletState.isAuthorized) {
       toast.error('Bạn không có quyền thêm bước truy xuất');
       throw new Error('Bạn không có quyền thêm bước truy xuất');
@@ -241,7 +243,7 @@ export const useContract = () => {
         console.warn('Không thể kiểm tra sản phẩm:', checkError);
       }
 
-      const tx = await contract.addStep(productId, location, description);
+      const tx = await contract.addStep(productId, location, description, status);
       await tx.wait();
 
       return tx;

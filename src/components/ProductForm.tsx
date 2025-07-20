@@ -6,7 +6,7 @@ function generateProductId() {
 }
 
 interface ProductFormProps {
-  onSubmit: (productId: string, name: string, ipfsHash: string) => Promise<void>;
+ onSubmit: (productId: string, name: string, ipfsHash: string, status: number, location: string) => Promise<void>;
   loading: boolean;
   isAuthorized: boolean;
 }
@@ -20,6 +20,8 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     productId: generateProductId(),
     name: '',
     description: '',
+    location: '',
+    status: 0,
     image: null as File | null,
     certificate: null as File | null,
   });
@@ -36,6 +38,9 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
     }
+    if (!formData.location.trim()) {
+  newErrors.location = 'Địa điểm không được để trống';
+}
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -133,15 +138,17 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setUploadProgress(prev => ({ ...prev, metadata: 'success' }));
 
     // 5. Gọi smart contract qua onSubmit prop
-    await onSubmit(formData.productId, formData.name, ipfsHash);
+    await onSubmit(formData.productId, formData.name, ipfsHash, formData.status,  formData.location,);
 
     setCreatedId(formData.productId);
     setFormData({
       productId: generateProductId(),
       name: '',
       description: '',
+      location: '',
       image: null,
       certificate: null,
+       status: 0,
     });
     setUploadProgress({});
   } catch (error: any) {
@@ -349,6 +356,47 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             placeholder="Nhập mô tả chi tiết về sản phẩm"
             rows={3}
           />
+        </div>
+
+        <div>
+          <label htmlFor="location" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <span>Địa điểm sản xuất</span>
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              errors.location ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Nhập địa điểm sản xuất"
+          />
+          {errors.location && (
+            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+          )}
+        </div>
+
+        <div>
+          <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <span>Trạng thái sản phẩm</span>
+            <span className="text-red-500">*</span>
+          </label>
+          <select
+            name="status"
+            value={formData.status}
+            onChange={(e) =>
+              setFormData((prev) => ({ ...prev, status: Number(e.target.value) }))
+            }
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all"
+          >
+            <option value={0}>Đã tạo</option>
+            <option value={1}>Đang xử lý</option>
+            <option value={2}>Hoàn thành</option>
+            <option value={3}>Từ chối</option>
+          </select>
         </div>
 
         <div className="flex flex-col gap-6">

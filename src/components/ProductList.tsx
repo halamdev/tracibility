@@ -142,7 +142,7 @@ export const ProductList: React.FC = () => {
   }, [creatorFilter]);
 
   useEffect(() => {
-    let filtered = products;
+    let filtered = [...products];
 
     // Filter by search term
     if (searchTerm.trim()) {
@@ -155,10 +155,9 @@ export const ProductList: React.FC = () => {
 
     // Filter by step status
     if (statusFilter !== 'all') {
-      // Lọc theo step status cuối cùng
       filtered = filtered.filter(product => {
         const latestStepStatus = getLatestStepStatus(product.data);
-        return latestStepStatus === statusFilter;
+        return Number(latestStepStatus) === statusFilter;
       });
     }
 

@@ -1,10 +1,11 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Package, Search, Filter, User, Calendar, MapPin, Eye, Plus, Image } from 'lucide-react';
+import { Package, Search, Filter, User, Calendar, MapPin, Eye, Plus, Image, QrCode, Download } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 import { Product, STEP_STATUS_LABELS, STEP_STATUS_COLORS } from '../types/contract';
 import { ProductModal } from './ProductModal';
 import { toast } from 'react-toastify';
+import QRCode from 'qrcode';
 
 interface ProductWithId {
   id: string;
@@ -39,6 +40,30 @@ export const ProductList: React.FC = () => {
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
 
+  const generateAndDownloadQR = async (productId: string, e: React.MouseEvent) => {
+    e.stopPropagation();
+    try {
+      const url = `${window.location.origin}/search?id=${productId}`;
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff'
+        }
+      });
+      
+      const link = document.createElement('a');
+      link.download = `qr-${productId}.png`;
+      link.href = qrDataUrl;
+      link.click();
+      
+      toast.success('QR Code đã được tải xuống!');
+    } catch (error) {
+      console.error('Lỗi tạo QR code:', error);
+      toast.error('Lỗi tạo QR Code');
+    }
+  };
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -400,9 +425,19 @@ export const ProductList: React.FC = () => {
                       <span className="text-xs text-gray-500">
                         {product.data.steps.length} bước truy xuất
                       </span>
-                      <div className="flex items-center space-x-1 text-blue-600 text-sm">
-                        <Eye className="w-4 h-4" />
-                        <span className="font-medium hidden sm:inline">Xem chi tiết</span>
+                      <div className="flex items-center space-x-2">
+                        <button
+                          onClick={(e) => generateAndDownloadQR(product.id, e)}
+                          className="flex items-center space-x-1 text-gray-600 hover:text-blue-600 text-sm transition-colors"
+                          title="Tải QR Code"
+                        >
+                          <QrCode className="w-4 h-4" />
+                          <span className="hidden sm:inline">QR</span>
+                        </button>
+                        <div className="flex items-center space-x-1 text-blue-600 text-sm">
+                          <Eye className="w-4 h-4" />
+                          <span className="font-medium hidden sm:inline">Xem chi tiết</span>
+                        </div>
                       </div>
                     </div>
                   </div>

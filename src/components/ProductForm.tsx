@@ -1,5 +1,6 @@
 import React, { useState } from 'react';
-import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle, MapPin } from 'lucide-react';
+import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle, MapPin, QrCode, Download } from 'lucide-react';
+import QRCode from 'qrcode';
 
 function generateProductId() {
   return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
@@ -31,6 +32,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     certificate?: 'uploading' | 'success' | 'error';
     metadata?: 'uploading' | 'success' | 'error';
   }>({});
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
@@ -48,6 +50,32 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const generateQRCode = async (productId: string) => {
+    try {
+      const url = `${window.location.origin}/search?id=${productId}`;
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    } catch (error) {
+      console.error('Lỗi tạo QR code:', error);
+    }
+  };
+
+  const downloadQRCode = () => {
+    if (qrCodeUrl && createdId) {
+      const link = document.createElement('a');
+      link.download = `qr-${createdId}.png`;
+      link.href = qrCodeUrl;
+      link.click();
+    }
   };
 
  const handleSubmit = async (e: React.FormEvent) => {
@@ -147,6 +175,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     await onSubmit(formData.productId, formData.name, ipfsHash, formData.location);
 
     setCreatedId(formData.productId);
+    await generateQRCode(formData.productId);
     setFormData({
       productId: generateProductId(),
       name: '',
@@ -300,6 +329,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <p className="text-green-700">
             Mã sản phẩm: <span className="font-mono font-semibold">{createdId}</span>
           </p>
+          {qrCodeUrl && (
+            <div className="mt-4 p-4 bg-white rounded-lg border">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <QrCode className="w-5 h-5 text-blue-600" />
+                  <span className="font-semibold text-gray-900">QR Code tra cứu</span>
+                </div>
+                <button
+                  onClick={downloadQRCode}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Tải xuống</span>
+                </button>
+              </div>
+              <div className="text-center">
+                <img 
+                  src={qrCodeUrl} 
+                  alt="QR Code" 
+                  className="mx-auto rounded-lg shadow-sm"
+                  style={{ width: '150px', height: '150px' }}
+                />
+                <p className="text-sm text-gray-600 mt-2">
+                  Quét để tra cứu sản phẩm này
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 

@@ -1,7 +1,8 @@
 import React, { useState, useEffect } from 'react';
-import { Package, User, Hash, FileText, Calendar, MapPin, Image, Award, ExternalLink, Download, Eye, EyeOff, Tag } from 'lucide-react';
-import { Product, Step, PRODUCT_STATUS_LABELS, STEP_STATUS_LABELS, PRODUCT_STATUS_COLORS, STEP_STATUS_COLORS } from '../types/contract';
+import { Package, User, Hash, FileText, Calendar, MapPin, Image, Award, ExternalLink, Download, Eye, EyeOff, Tag, QrCode } from 'lucide-react';
+import { Product, Step, STEP_STATUS_LABELS, STEP_STATUS_COLORS } from '../types/contract';
 import { useNavigate } from 'react-router-dom';
+import QRCode from 'qrcode';
 
 interface ProductDetailsProps {
   productId: string;
@@ -29,6 +30,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const [loadingMetadata, setLoadingMetadata] = useState(true);
   const [metadataError, setMetadataError] = useState<string | null>(null);
   const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
+  const [showQRCode, setShowQRCode] = useState(false);
 
   const formatAddress = (address: string) => {
     return `${address.slice(0, 6)}...${address.slice(-4)}`;
@@ -45,6 +48,32 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     return `https://gateway.pinata.cloud/ipfs/${cleanHash}`;
   };
   
+  const generateQRCode = async () => {
+    try {
+      const url = `${window.location.origin}/search?id=${productId}`;
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    } catch (error) {
+      console.error('Lỗi tạo QR code:', error);
+    }
+  };
+
+  const downloadQRCode = () => {
+    if (qrCodeUrl) {
+      const link = document.createElement('a');
+      link.download = `qr-${productId}.png`;
+      link.href = qrCodeUrl;
+      link.click();
+    }
+  };
+
   const handleCreatorClick = (creatorAddress: string) => {
     navigate(`/products?creator=${creatorAddress}`);
   };
@@ -74,6 +103,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   useEffect(() => {
     if (product.ipfsHash) {
       fetchMetadata();
+      generateQRCode();
     }
   }, [product.ipfsHash]);
 
@@ -194,7 +224,13 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   );
 };
 
+  // Lấy step status mới nhất
+  const getLatestStepStatus = () => {
+    if (steps.length === 0) return null;
+    return steps[steps.length - 1].status;
+  };
 
+  const latestStepStatus = getLatestStepStatus();
 
   return (
     <div className="space-y-6">
@@ -206,17 +242,32 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               <Package className="w-6 h-6 text-purple-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Thông tin sản phẩm</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${PRODUCT_STATUS_COLORS[product.status as keyof typeof PRODUCT_STATUS_LABELS]}`}>
-              {PRODUCT_STATUS_LABELS[product.status as keyof typeof PRODUCT_STATUS_LABELS]}
-            </span>
+            {latestStepStatus !== null ? (
+              <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[latestStepStatus as keyof typeof STEP_STATUS_COLORS]}`}>
+                {STEP_STATUS_LABELS[latestStepStatus as keyof typeof STEP_STATUS_LABELS]}
+              </span>
+            ) : (
+              <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                Chưa có bước truy xuất
+              </span>
+            )}
           </div>
-          <button
-            onClick={() => setShowTechnicalInfo(!showTechnicalInfo)}
-            className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-          >
-            {showTechnicalInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-            <span>{showTechnicalInfo ? 'Ẩn' : 'Hiện'} thông tin kỹ thuật</span>
-          </button>
+          <div className="flex items-center space-x-2">
+            <button
+              onClick={() => setShowQRCode(!showQRCode)}
+              className="flex items-center space-x-2 text-sm text-blue-600 hover:text-blue-900 transition-colors"
+            >
+              <QrCode className="w-4 h-4" />
+              <span>{showQRCode ? 'Ẩn' : 'Hiện'} QR Code</span>
+            </button>
+            <button
+              onClick={() => setShowTechnicalInfo(!showTechnicalInfo)}
+              className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
+            >
+              {showTechnicalInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
+              <span>{showTechnicalInfo ? 'Ẩn' : 'Hiện'} thông tin kỹ thuật</span>
+            </button>
+          </div>
         </div>
 
         {loadingMetadata ? (
@@ -241,7 +292,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
         ) : metadata ? (
           <div className="space-y-6">
             {/* Basic Info */}
-            <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
+            <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
               <div className="space-y-4">
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
@@ -320,6 +371,45 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                   </div>
                 )}
               </div>
+
+              {/* QR Code */}
+              {showQRCode && (
+                <div>
+                  <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                    <QrCode className="w-4 h-4" />
+                    <span>QR Code tra cứu</span>
+                  </label>
+                  <div className="bg-gray-50 rounded-lg p-4 text-center">
+                    {qrCodeUrl ? (
+                      <div className="space-y-3">
+                        <img 
+                          src={qrCodeUrl} 
+                          alt="QR Code" 
+                          className="mx-auto rounded-lg shadow-sm"
+                          style={{ width: '200px', height: '200px' }}
+                        />
+                        <div className="space-y-2">
+                          <p className="text-sm text-gray-600">
+                            Quét để tra cứu sản phẩm
+                          </p>
+                          <button
+                            onClick={downloadQRCode}
+                            className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm mx-auto transition-colors"
+                          >
+                            <Download className="w-4 h-4" />
+                            <span>Tải QR Code</span>
+                          </button>
+                        </div>
+                      </div>
+                    ) : (
+                      <div className="py-8">
+                        <div className="w-6 h-6 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-2"></div>
+                        <p className="text-sm text-gray-600">Đang tạo QR Code...</p>
+                      </div>
+                    )}
+                  </div>
+                </div>
+              )}
             </div>
 
             {/* Certificate */}
@@ -358,6 +448,11 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
               <p className="text-blue-800 font-semibold">
                 📊 Tổng số bước truy xuất: {steps.length} bước
+                {latestStepStatus !== null && (
+                  <span className="ml-4">
+                    🏷️ Trạng thái hiện tại: {STEP_STATUS_LABELS[latestStepStatus as keyof typeof STEP_STATUS_LABELS]}
+                  </span>
+                )}
               </p>
             </div>
           </div>

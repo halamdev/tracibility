@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Search, Shield, Clock, Globe } from 'lucide-react';
+import { Package, Search, Shield, Clock, Globe, List } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 
 export const HomePage: React.FC = () => {
@@ -8,18 +8,20 @@ export const HomePage: React.FC = () => {
 
   const features = [
     {
-      icon: Package,
-      title: 'Tạo sản phẩm',
-      description: 'Đăng ký sản phẩm mới với thông tin chi tiết và metadata IPFS',
-      link: '/create',
-      color: 'blue',
-    },
-    {
       icon: Search,
       title: 'Tra cứu sản phẩm',
       description: 'Tìm kiếm và xem lịch sử truy xuất của bất kỳ sản phẩm nào',
       link: '/search',
       color: 'green',
+      requiresConnection: false,
+    },
+    {
+      icon: List,
+      title: 'Quản lý sản phẩm',
+      description: 'Xem danh sách và tạo sản phẩm mới trong hệ thống',
+      link: '/products',
+      color: 'orange',
+      requiresConnection: true,
     },
     {
       icon: Shield,
@@ -27,24 +29,8 @@ export const HomePage: React.FC = () => {
       description: 'Cấp phát và thu hồi quyền truy cập cho các nhà cung cấp',
       link: '/admin',
       color: 'purple',
-    },
-  ];
-
-  const benefits = [
-    {
-      icon: Shield,
-      title: 'Bảo mật cao',
-      description: 'Dữ liệu được mã hóa và lưu trữ trên blockchain Ethereum',
-    },
-    {
-      icon: Clock,
-      title: 'Theo dõi thời gian thực',
-      description: 'Cập nhật trạng thái sản phẩm ngay lập tức và minh bạch',
-    },
-    {
-      icon: Globe,
-      title: 'Toàn cầu',
-      description: 'Truy cập từ bất kỳ đâu với kết nối internet và ví crypto',
+      requiresConnection: true,
+      requiresOwner: true,
     },
   ];
 
@@ -78,9 +64,9 @@ export const HomePage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         {features.map((feature, index) => {
           const Icon = feature.icon;
-          const isDisabled = !walletState.isConnected || 
-            (feature.link === '/create' && !walletState.isAuthorized) ||
-            (feature.link === '/admin' && !walletState.isOwner);
+          const isDisabled = 
+            (feature.requiresConnection && !walletState.isConnected) ||
+            (feature.requiresOwner && !walletState.isOwner);
           
           return (
             <div key={index} className="relative">
@@ -102,10 +88,17 @@ export const HomePage: React.FC = () => {
                 <p className="text-gray-600">
                   {feature.description}
                 </p>
-                {isDisabled && (
+                {isDisabled && feature.requiresOwner && (
                   <div className="absolute top-4 right-4">
                     <div className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded">
-                      {feature.link === '/admin' ? 'Chỉ owner' : 'Cần quyền'}
+                      Chỉ owner
+                    </div>
+                  </div>
+                )}
+                {isDisabled && feature.requiresConnection && !feature.requiresOwner && (
+                  <div className="absolute top-4 right-4">
+                    <div className="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded">
+                      Cần kết nối ví
                     </div>
                   </div>
                 )}
@@ -113,31 +106,6 @@ export const HomePage: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* Benefits Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-          Tại sao chọn Traceability System?
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {benefits.map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <div key={index} className="text-center">
-                <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl w-fit mx-auto mb-4">
-                  <Icon className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {benefit.title}
-                </h3>
-                <p className="text-gray-600">
-                  {benefit.description}
-                </p>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* Stats Section */}

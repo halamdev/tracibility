@@ -48,7 +48,7 @@ export const Header: React.FC = () => {
             <div className="p-2 bg-gradient-to-br from-blue-600 to-purple-600 rounded-lg">
               <Package className="w-6 h-6 text-white" />
             </div>
-            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+            <span className="text-xl font-bold bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent hidden sm:inline">
               Traceability
             </span>
           </Link>

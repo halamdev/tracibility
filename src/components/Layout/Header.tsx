@@ -1,6 +1,6 @@
 import React, { useEffect, useState } from "react";
-import { Link, useLocation, useNavigate  } from 'react-router-dom';
-import { Package, Home, Search, Plus, Settings,  LogOut, LogIn } from 'lucide-react';
+import { Link, useLocation, useNavigate } from 'react-router-dom';
+import { Package, Home, Search, Settings, LogOut, LogIn, List } from 'lucide-react';
 import { WalletConnection } from '../WalletConnection';
 import { NetworkInfo } from '../NetworkInfo';
 import { useContractContext } from '../../contexts/ContractContext';
@@ -29,13 +29,13 @@ export const Header: React.FC = () => {
   };
 
   const navItems = [
-        { path: "/", label: "Trang chủ", icon: Home },
+    { path: "/", label: "Trang chủ", icon: Home },
     { path: "/search", label: "Tra cứu", icon: Search },
     ...(isLoggedIn
       ? [
-          { path: "/create", label: "Tạo sản phẩm", icon: Plus },
-          { path: "/admin", label: "Quản lý", icon: Settings },
-        ]
+        { path: '/products', label: 'Sản phẩm', icon: List },
+        { path: "/admin", label: "Quản lý", icon: Settings },
+      ]
       : []),
   ];
 
@@ -65,11 +65,10 @@ export const Header: React.FC = () => {
                   <Link
                     key={item.path}
                     to={item.path}
-                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${
-                      isActive
+                    className={`flex items-center space-x-2 px-4 py-2 rounded-lg transition-colors ${isActive
                         ? "bg-blue-100 text-blue-700"
                         : "text-gray-600 hover:bg-gray-100 hover:text-gray-900"
-                    }`}
+                      }`}
                   >
                     <Icon className="w-4 h-4" />
                     <span>{item.label}</span>
@@ -124,11 +123,10 @@ export const Header: React.FC = () => {
                 <Link
                   key={item.path}
                   to={item.path}
-                  className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${
-                    isActive
+                  className={`flex flex-col items-center space-y-1 p-2 rounded-lg transition-colors ${isActive
                       ? "text-blue-700"
                       : "text-gray-600 hover:text-gray-900"
-                  }`}
+                    }`}
                 >
                   <Icon className="w-5 h-5" />
                   <span className="text-xs">{item.label}</span>

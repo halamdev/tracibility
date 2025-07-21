@@ -13,6 +13,7 @@ export const HomePage: React.FC = () => {
       description: 'Tìm kiếm và xem lịch sử truy xuất của bất kỳ sản phẩm nào',
       link: '/search',
       color: 'green',
+      requiresConnection: false,
     },
     {
       icon: List,
@@ -20,6 +21,7 @@ export const HomePage: React.FC = () => {
       description: 'Xem danh sách và tạo sản phẩm mới trong hệ thống',
       link: '/products',
       color: 'orange',
+      requiresConnection: true,
     },
     {
       icon: Shield,
@@ -27,6 +29,8 @@ export const HomePage: React.FC = () => {
       description: 'Cấp phát và thu hồi quyền truy cập cho các nhà cung cấp',
       link: '/admin',
       color: 'purple',
+      requiresConnection: true,
+      requiresOwner: true,
     },
   ];
 
@@ -78,8 +82,9 @@ export const HomePage: React.FC = () => {
       <div className="grid grid-cols-1 md:grid-cols-3 gap-8 mb-16">
         {features.map((feature, index) => {
           const Icon = feature.icon;
-          const isDisabled = !walletState.isConnected || 
-            (feature.link === '/admin' && !walletState.isOwner);
+          const isDisabled = 
+            (feature.requiresConnection && !walletState.isConnected) ||
+            (feature.requiresOwner && !walletState.isOwner);
           
           return (
             <div key={index} className="relative">
@@ -101,10 +106,17 @@ export const HomePage: React.FC = () => {
                 <p className="text-gray-600">
                   {feature.description}
                 </p>
-                {isDisabled && (
+                {isDisabled && feature.requiresOwner && (
                   <div className="absolute top-4 right-4">
                     <div className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded">
                       Chỉ owner
+                    </div>
+                  </div>
+                )}
+                {isDisabled && feature.requiresConnection && !feature.requiresOwner && (
+                  <div className="absolute top-4 right-4">
+                    <div className="bg-yellow-100 text-yellow-600 text-xs px-2 py-1 rounded">
+                      Cần kết nối ví
                     </div>
                   </div>
                 )}

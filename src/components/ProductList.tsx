@@ -324,78 +324,85 @@ export const ProductList: React.FC = () => {
             return (
               <div
                 key={product.id}
-                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 cursor-pointer"
+                className="bg-white rounded-lg shadow-md border border-gray-200 hover:shadow-lg transition-all duration-200 cursor-pointer overflow-hidden"
                 onClick={() => handleProductClick(product.id)}
               >
-                <div className="flex items-start space-x-4">
+                <div className="flex items-center space-x-4 p-4">
                   {/* Product Image */}
-                  <ImagePreview 
-                    metadata={product.metadata} 
-                    productName={product.metadata?.name || product.data.name}
-                  />
+                  <div className="flex-shrink-0">
+                    <ImagePreview 
+                      metadata={product.metadata} 
+                      productName={product.metadata?.name || product.data.name}
+                    />
+                  </div>
                   
                   {/* Product Info */}
                   <div className="flex-1 min-w-0">
-                    <div className="flex items-center justify-between mb-2">
-                      <div className="flex items-center space-x-2">
-                        <Package className="w-4 h-4 text-blue-600" />
-                        <span className="font-mono text-sm text-gray-600">{product.id}</span>
+                    {/* Header with ID and Status */}
+                    <div className="flex items-center justify-between mb-3">
+                      <div className="flex items-center space-x-2 min-w-0">
+                        <Package className="w-4 h-4 text-blue-600 flex-shrink-0" />
+                        <span className="font-mono text-sm text-gray-600 truncate">{product.id}</span>
                       </div>
                       {latestStepStatus !== null ? (
-                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[latestStepStatus as keyof typeof STEP_STATUS_COLORS]}`}>
+                        <span className={`px-2 py-1 rounded-full text-xs font-medium whitespace-nowrap ${STEP_STATUS_COLORS[latestStepStatus as keyof typeof STEP_STATUS_COLORS]}`}>
                           {STEP_STATUS_LABELS[latestStepStatus as keyof typeof STEP_STATUS_LABELS]}
                         </span>
                       ) : (
-                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                        <span className="px-2 py-1 rounded-full text-xs font-medium bg-gray-100 text-gray-500 whitespace-nowrap">
                           Chưa cập nhật
                         </span>
                       )}
                     </div>
 
-                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+                    {/* Product Name */}
+                    <h3 className="text-lg font-semibold text-gray-900 mb-2 line-clamp-1">
                       {product.metadata?.name || product.data.name}
                     </h3>
 
+                    {/* Description */}
                     {product.metadata?.description && (
-                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-1">
                         {product.metadata.description}
                       </p>
                     )}
 
-                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm mb-3">
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <MapPin className="w-4 h-4" />
+                    {/* Info Grid */}
+                    <div className="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 gap-2 text-sm mb-3">
+                      <div className="flex items-center space-x-2 text-gray-600 min-w-0">
+                        <MapPin className="w-4 h-4 flex-shrink-0" />
                         <span className="truncate">{product.metadata?.location || product.data.location}</span>
                       </div>
 
-                      <div className="flex items-center space-x-2 text-gray-600">
-                        <User className="w-4 h-4" />
+                      <div className="flex items-center space-x-2 text-gray-600 min-w-0">
+                        <User className="w-4 h-4 flex-shrink-0" />
                         <button
                           onClick={(e) => {
                             e.stopPropagation();
                             handleCreatorClick(product.data.creator);
                           }}
-                          className="hover:text-blue-600 transition-colors truncate"
+                          className="hover:text-blue-600 transition-colors truncate text-left"
                         >
                           {formatAddress(product.data.creator)}
                         </button>
                       </div>
 
                       {product.metadata?.createdAt && (
-                        <div className="flex items-center space-x-2 text-gray-600">
-                          <Calendar className="w-4 h-4" />
-                          <span>{new Date(product.metadata.createdAt).toLocaleDateString('vi-VN')}</span>
+                        <div className="flex items-center space-x-2 text-gray-600 min-w-0">
+                          <Calendar className="w-4 h-4 flex-shrink-0" />
+                          <span className="truncate">{new Date(product.metadata.createdAt).toLocaleDateString('vi-VN')}</span>
                         </div>
                       )}
                     </div>
 
-                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
-                      <span className="text-sm text-gray-600">
+                    {/* Footer */}
+                    <div className="flex items-center justify-between pt-2 border-t border-gray-100">
+                      <span className="text-xs text-gray-500">
                         {product.data.steps.length} bước truy xuất
                       </span>
-                      <div className="flex items-center space-x-1 text-blue-600">
+                      <div className="flex items-center space-x-1 text-blue-600 text-sm">
                         <Eye className="w-4 h-4" />
-                        <span className="text-sm font-medium">Xem chi tiết</span>
+                        <span className="font-medium hidden sm:inline">Xem chi tiết</span>
                       </div>
                     </div>
                   </div>

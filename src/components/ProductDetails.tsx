@@ -260,13 +260,6 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               <QrCode className="w-4 h-4" />
               <span>{showQRCode ? 'Ẩn' : 'Hiện'} QR Code</span>
             </button>
-            <button
-              onClick={() => setShowTechnicalInfo(!showTechnicalInfo)}
-              className="flex items-center space-x-2 text-sm text-gray-600 hover:text-gray-900 transition-colors"
-            >
-              {showTechnicalInfo ? <EyeOff className="w-4 h-4" /> : <Eye className="w-4 h-4" />}
-              <span>{showTechnicalInfo ? 'Ẩn' : 'Hiện'} thông tin kỹ thuật</span>
-            </button>
           </div>
         </div>
 

@@ -34,24 +34,6 @@ export const HomePage: React.FC = () => {
     },
   ];
 
-  const benefits = [
-    {
-      icon: Shield,
-      title: 'Bảo mật cao',
-      description: 'Dữ liệu được mã hóa và lưu trữ trên blockchain Ethereum',
-    },
-    {
-      icon: Clock,
-      title: 'Theo dõi thời gian thực',
-      description: 'Cập nhật trạng thái sản phẩm ngay lập tức và minh bạch',
-    },
-    {
-      icon: Globe,
-      title: 'Toàn cầu',
-      description: 'Truy cập từ bất kỳ đâu với kết nối internet và ví crypto',
-    },
-  ];
-
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       {/* Hero Section */}
@@ -124,31 +106,6 @@ export const HomePage: React.FC = () => {
             </div>
           );
         })}
-      </div>
-
-      {/* Benefits Section */}
-      <div className="bg-white rounded-2xl shadow-lg p-8 border border-gray-100">
-        <h2 className="text-3xl font-bold text-center text-gray-900 mb-8">
-          Tại sao chọn Traceability System?
-        </h2>
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {benefits.map((benefit, index) => {
-            const Icon = benefit.icon;
-            return (
-              <div key={index} className="text-center">
-                <div className="p-4 bg-gradient-to-br from-blue-100 to-purple-100 rounded-xl w-fit mx-auto mb-4">
-                  <Icon className="w-8 h-8 text-blue-600" />
-                </div>
-                <h3 className="text-lg font-semibold text-gray-900 mb-2">
-                  {benefit.title}
-                </h3>
-                <p className="text-gray-600">
-                  {benefit.description}
-                </p>
-              </div>
-            );
-          })}
-        </div>
       </div>
 
       {/* Stats Section */}

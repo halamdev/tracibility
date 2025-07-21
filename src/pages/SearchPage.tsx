@@ -37,10 +37,12 @@ export const SearchPage: React.FC = () => {
   const handleSearch = async (productId: string) => {
     try {
       setSearchLoading(true);
+      setCurrentProduct(null); // Clear previous results
       const product = await getProduct(productId);
       
       if (!product) {
-        setCurrentProduct(null);
+        // Hiển thị thông báo lỗi khi không tìm thấy sản phẩm
+        toast.error('Không tìm thấy sản phẩm với mã này. Vui lòng kiểm tra lại mã sản phẩm.');
         return;
       }
 
@@ -51,7 +53,8 @@ export const SearchPage: React.FC = () => {
         steps,
       });
     } catch (err) {
-      setCurrentProduct(null);
+      // Xử lý lỗi khi có vấn đề với việc tra cứu
+      toast.error('Có lỗi xảy ra khi tra cứu sản phẩm. Vui lòng thử lại sau.');
     } finally {
       setSearchLoading(false);
     }
@@ -84,8 +87,16 @@ export const SearchPage: React.FC = () => {
         {/* Search Form */}
         <ProductSearch onSearch={handleSearch} loading={searchLoading} />
 
+        {/* Loading state */}
+        {searchLoading && (
+          <div className="text-center py-12">
+            <div className="w-8 h-8 border-2 border-blue-600 border-t-transparent rounded-full animate-spin mx-auto mb-4"></div>
+            <p className="text-gray-600">Đang tra cứu sản phẩm...</p>
+          </div>
+        )}
+
         {/* Product Details */}
-        {currentProduct && (
+        {currentProduct && !searchLoading && (
           <div className="space-y-6">
             <ProductDetails
               productId={currentProduct.id}
@@ -105,7 +116,7 @@ export const SearchPage: React.FC = () => {
         )}
 
         {/* No results message */}
-        {!currentProduct && !searchLoading && (
+        {!currentProduct && !searchLoading && !error && (
           <div className="text-center py-12">
             <div className="text-gray-400 mb-4">
               <svg className="w-16 h-16 mx-auto" fill="none" stroke="currentColor" viewBox="0 0 24 24">

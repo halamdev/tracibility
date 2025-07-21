@@ -8,13 +8,6 @@ export const HomePage: React.FC = () => {
 
   const features = [
     {
-      icon: Package,
-      title: 'Tạo sản phẩm',
-      description: 'Đăng ký sản phẩm mới với thông tin chi tiết và metadata IPFS',
-      link: '/create',
-      color: 'blue',
-    },
-    {
       icon: Search,
       title: 'Tra cứu sản phẩm',
       description: 'Tìm kiếm và xem lịch sử truy xuất của bất kỳ sản phẩm nào',
@@ -23,8 +16,8 @@ export const HomePage: React.FC = () => {
     },
     {
       icon: List,
-      title: 'Danh sách sản phẩm',
-      description: 'Xem tất cả sản phẩm đã đăng ký trong hệ thống',
+      title: 'Quản lý sản phẩm',
+      description: 'Xem danh sách và tạo sản phẩm mới trong hệ thống',
       link: '/products',
       color: 'orange',
     },
@@ -86,7 +79,6 @@ export const HomePage: React.FC = () => {
         {features.map((feature, index) => {
           const Icon = feature.icon;
           const isDisabled = !walletState.isConnected || 
-            (feature.link === '/create' && !walletState.isAuthorized) ||
             (feature.link === '/admin' && !walletState.isOwner);
           
           return (
@@ -112,7 +104,7 @@ export const HomePage: React.FC = () => {
                 {isDisabled && (
                   <div className="absolute top-4 right-4">
                     <div className="bg-gray-100 text-gray-500 text-xs px-2 py-1 rounded">
-                      {feature.link === '/admin' ? 'Chỉ owner' : 'Cần quyền'}
+                      Chỉ owner
                     </div>
                   </div>
                 )}

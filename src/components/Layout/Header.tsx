@@ -18,7 +18,6 @@ export const Header: React.FC = () => {
     { path: '/', label: 'Trang chủ', icon: Home },
     { path: '/search', label: 'Tra cứu', icon: Search },
     { path: '/products', label: 'Sản phẩm', icon: List },
-    { path: '/create', label: 'Tạo sản phẩm', icon: Plus },
     { path: '/admin', label: 'Quản lý', icon: Settings },
   ];
 

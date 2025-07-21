@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { toast } from 'react-toastify';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../constants/contract';
 import { Step } from '../../types/contract';
@@ -28,7 +27,6 @@ export const useGetSteps = (setError: (e: string | null) => void) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Lỗi lấy danh sách bước truy xuất';
       setError(errorMessage);
-      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
   }, [setError]);

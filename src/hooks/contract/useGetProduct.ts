@@ -1,5 +1,4 @@
 import { useCallback } from 'react';
-import { toast } from 'react-toastify';
 import { ethers } from 'ethers';
 import { CONTRACT_ADDRESS, CONTRACT_ABI } from '../../constants/contract';
 import { Product } from '../../types/contract';
@@ -15,9 +14,7 @@ export const useGetProduct = (setError: (e: string | null) => void) => {
       try {
         const exists = await contract.isProductExists(productId);
         if (!exists) {
-          const msg = 'Không tìm thấy sản phẩm với mã này';
-          setError(msg);
-          toast.error(msg);
+          // Không hiển thị toast ở đây, để component cha xử lý
           return null;
         }
         const [name, ipfsHash, creator, status, steps, location] = await contract.getProduct(productId);
@@ -31,7 +28,6 @@ export const useGetProduct = (setError: (e: string | null) => void) => {
     } catch (err: any) {
       const errorMessage = err.message || 'Lỗi lấy thông tin sản phẩm';
       setError(errorMessage);
-      toast.error(errorMessage);
       throw new Error(errorMessage);
     }
   }, [setError]);

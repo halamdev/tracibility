@@ -2,6 +2,7 @@ export * from './AdminPanel';
 export * from './AddStepForm';
 export * from './ProductDetails';
 export * from './ProductForm';
+export * from './ProductModal';
 export * from './ProductSearch';
 export * from './ProductList';
 export * from './NetworkInfo';

@@ -1,8 +1,10 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Package, Search, Filter, User, Calendar, MapPin, Eye } from 'lucide-react';
+import { Package, Search, Filter, User, Calendar, MapPin, Eye, Plus, Image } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 import { Product, STEP_STATUS_LABELS, STEP_STATUS_COLORS } from '../types/contract';
+import { ProductModal } from './ProductModal';
+import { toast } from 'react-toastify';
 
 interface ProductWithId {
   id: string;
@@ -20,12 +22,19 @@ export const ProductList: React.FC = () => {
   const [searchParams] = useSearchParams();
   const creatorFilter = searchParams.get('creator');
 
-  const { getProductsByCreator, getProduct, walletState } = useContractContext();
+  const { 
+    getProductsByCreator, 
+    getProduct, 
+    walletState, 
+    createProduct,
+    loading: contractLoading 
+  } = useContractContext();
 
   const [products, setProducts] = useState<ProductWithId[]>([]);
   const [filteredProducts, setFilteredProducts] = useState<ProductWithId[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [showCreateModal, setShowCreateModal] = useState(false);
 
   const [searchTerm, setSearchTerm] = useState('');
   const [statusFilter, setStatusFilter] = useState<number | 'all'>('all');
@@ -139,7 +148,58 @@ export const ProductList: React.FC = () => {
     navigate(`/products?creator=${creatorAddress}`);
   };
 
+  const handleCreateProduct = async (productId: string, name: string, ipfsHash: string, location: string) => {
+    const result = await createProduct(productId, name, ipfsHash, location);
+    if (result) {
+      toast.success('Sản phẩm đã được tạo thành công!');
+      // Reload products list
+      await loadProducts();
+    }
+  };
 
+  const ImagePreview: React.FC<{ metadata: any; productName: string }> = ({ metadata, productName }) => {
+    const [imageError, setImageError] = useState(false);
+    const [imageLoading, setImageLoading] = useState(true);
+
+    if (!metadata?.image) {
+      return (
+        <div className="w-16 h-16 bg-gray-100 rounded-lg flex items-center justify-center">
+          <Image className="w-6 h-6 text-gray-400" />
+        </div>
+      );
+    }
+
+    const getIpfsUrl = (hash: string) => {
+      const cleanHash = hash.replace('ipfs://', '');
+      return `https://gateway.pinata.cloud/ipfs/${cleanHash}`;
+    };
+
+    return (
+      <div className="w-16 h-16 bg-gray-100 rounded-lg overflow-hidden relative">
+        {imageLoading && (
+          <div className="absolute inset-0 flex items-center justify-center">
+            <div className="w-4 h-4 border-2 border-blue-600 border-t-transparent rounded-full animate-spin"></div>
+          </div>
+        )}
+        {!imageError ? (
+          <img
+            src={getIpfsUrl(metadata.image)}
+            alt={productName}
+            className="w-full h-full object-cover"
+            onLoad={() => setImageLoading(false)}
+            onError={() => {
+              setImageError(true);
+              setImageLoading(false);
+            }}
+          />
+        ) : (
+          <div className="w-full h-full flex items-center justify-center">
+            <Image className="w-6 h-6 text-gray-400" />
+          </div>
+        )}
+      </div>
+    );
+  };
 
   if (loading) {
     return (
@@ -172,11 +232,23 @@ export const ProductList: React.FC = () => {
   return (
     <div className="container mx-auto px-4 py-8 max-w-6xl">
       <div className="text-center mb-8">
-        <h1 className="text-3xl font-bold text-gray-900 mb-4">
-          {creatorFilter || walletState.address
-            ? `Sản phẩm của ${formatAddress(creatorFilter || walletState.address || '')}`
-            : 'Danh sách sản phẩm'}
-        </h1>
+        <div className="flex items-center justify-between mb-4">
+          <h1 className="text-3xl font-bold text-gray-900">
+            {creatorFilter || walletState.address
+              ? `Sản phẩm của ${formatAddress(creatorFilter || walletState.address || '')}`
+              : 'Danh sách sản phẩm'}
+          </h1>
+          
+          {walletState.isAuthorized && (
+            <button
+              onClick={() => setShowCreateModal(true)}
+              className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-4 py-2 rounded-lg font-semibold transition-colors"
+            >
+              <Plus className="w-5 h-5" />
+              <span>Tạo sản phẩm mới</span>
+            </button>
+          )}
+        </div>
         <p className="text-gray-600">
           {(creatorFilter || walletState.address)
             ? 'Tất cả sản phẩm được tạo bởi địa chỉ này'
@@ -246,18 +318,105 @@ export const ProductList: React.FC = () => {
           </p>
         </div>
       ) : (
-        <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="space-y-4">
           {filteredProducts.map((product) => {
             const latestStepStatus = getLatestStepStatus(product.data);
             return (
               <div
                 key={product.id}
-                className="bg-white rounded-xl shadow-lg border border-gray-100 overflow-hidden hover:shadow-xl transition-all duration-300 hover:-translate-y-1 cursor-pointer"
+                className="bg-white rounded-xl shadow-lg border border-gray-100 p-6 hover:shadow-xl transition-all duration-300 cursor-pointer"
                 onClick={() => handleProductClick(product.id)}
               >
-                <div className="p-6">
-                  <div className="flex items-center justify-between mb-4">
-                    <div className="flex items-center space-x-2">
+                <div className="flex items-start space-x-4">
+                  {/* Product Image */}
+                  <ImagePreview 
+                    metadata={product.metadata} 
+                    productName={product.metadata?.name || product.data.name}
+                  />
+                  
+                  {/* Product Info */}
+                  <div className="flex-1 min-w-0">
+                    <div className="flex items-center justify-between mb-2">
+                      <div className="flex items-center space-x-2">
+                        <Package className="w-4 h-4 text-blue-600" />
+                        <span className="font-mono text-sm text-gray-600">{product.id}</span>
+                      </div>
+                      {latestStepStatus !== null ? (
+                        <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[latestStepStatus as keyof typeof STEP_STATUS_COLORS]}`}>
+                          {STEP_STATUS_LABELS[latestStepStatus as keyof typeof STEP_STATUS_LABELS]}
+                        </span>
+                      ) : (
+                        <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
+                          Chưa cập nhật
+                        </span>
+                      )}
+                    </div>
+
+                    <h3 className="text-lg font-bold text-gray-900 mb-2 line-clamp-1">
+                      {product.metadata?.name || product.data.name}
+                    </h3>
+
+                    {product.metadata?.description && (
+                      <p className="text-gray-600 text-sm mb-3 line-clamp-2">
+                        {product.metadata.description}
+                      </p>
+                    )}
+
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-2 text-sm mb-3">
+                      <div className="flex items-center space-x-2 text-gray-600">
+                        <MapPin className="w-4 h-4" />
+                        <span className="truncate">{product.metadata?.location || product.data.location}</span>
+                      </div>
+
+                      <div className="flex items-center space-x-2 text-gray-600">
+                        <User className="w-4 h-4" />
+                        <button
+                          onClick={(e) => {
+                            e.stopPropagation();
+                            handleCreatorClick(product.data.creator);
+                          }}
+                          className="hover:text-blue-600 transition-colors truncate"
+                        >
+                          {formatAddress(product.data.creator)}
+                        </button>
+                      </div>
+
+                      {product.metadata?.createdAt && (
+                        <div className="flex items-center space-x-2 text-gray-600">
+                          <Calendar className="w-4 h-4" />
+                          <span>{new Date(product.metadata.createdAt).toLocaleDateString('vi-VN')}</span>
+                        </div>
+                      )}
+                    </div>
+
+                    <div className="flex items-center justify-between pt-3 border-t border-gray-200">
+                      <span className="text-sm text-gray-600">
+                        {product.data.steps.length} bước truy xuất
+                      </span>
+                      <div className="flex items-center space-x-1 text-blue-600">
+                        <Eye className="w-4 h-4" />
+                        <span className="text-sm font-medium">Xem chi tiết</span>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            );
+          })}
+        </div>
+      )}
+
+      {/* Create Product Modal */}
+      <ProductModal
+        isOpen={showCreateModal}
+        onClose={() => setShowCreateModal(false)}
+        onSubmit={handleCreateProduct}
+        loading={contractLoading}
+        isAuthorized={walletState.isAuthorized}
+      />
+    </div>
+  );
+};
                       <Package className="w-5 h-5 text-blue-600" />
                       <span className="font-mono text-sm text-gray-600">{product.id}</span>
                     </div>

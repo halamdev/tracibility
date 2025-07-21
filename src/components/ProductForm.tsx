@@ -1,12 +1,13 @@
 import React, { useState } from 'react';
-import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle } from 'lucide-react';
+import { Package, Hash, FileText, Plus, Upload, Image, Award, X, CheckCircle, MapPin, QrCode, Download } from 'lucide-react';
+import QRCode from 'qrcode';
 
 function generateProductId() {
   return 'SP-' + Math.random().toString(36).substr(2, 9).toUpperCase();
 }
 
 interface ProductFormProps {
-  onSubmit: (productId: string, name: string, ipfsHash: string) => Promise<void>;
+  onSubmit: (productId: string, name: string, ipfsHash: string, location: string) => Promise<void>;
   loading: boolean;
   isAuthorized: boolean;
 }
@@ -20,6 +21,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     productId: generateProductId(),
     name: '',
     description: '',
+    location: '',
     image: null as File | null,
     certificate: null as File | null,
   });
@@ -30,14 +32,50 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     certificate?: 'uploading' | 'success' | 'error';
     metadata?: 'uploading' | 'success' | 'error';
   }>({});
+  const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
 
   const validateForm = () => {
     const newErrors: Record<string, string> = {};
     if (!formData.name.trim()) {
       newErrors.name = 'Tên sản phẩm không được để trống';
     }
+    if (!formData.location.trim()) {
+      newErrors.location = 'Địa điểm không được để trống';
+    }
+    if (!formData.image) {
+      newErrors.image = 'Hình ảnh sản phẩm là bắt buộc';
+    }
+    if (!formData.certificate) {
+      newErrors.certificate = 'Chứng nhận sản phẩm là bắt buộc';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
+  };
+
+  const generateQRCode = async (productId: string) => {
+    try {
+      const url = `${window.location.origin}/search?id=${productId}`;
+      const qrDataUrl = await QRCode.toDataURL(url, {
+        width: 256,
+        margin: 2,
+        color: {
+          dark: '#1f2937',
+          light: '#ffffff'
+        }
+      });
+      setQrCodeUrl(qrDataUrl);
+    } catch (error) {
+      console.error('Lỗi tạo QR code:', error);
+    }
+  };
+
+  const downloadQRCode = () => {
+    if (qrCodeUrl && createdId) {
+      const link = document.createElement('a');
+      link.download = `qr-${createdId}.png`;
+      link.href = qrCodeUrl;
+      link.click();
+    }
   };
 
  const handleSubmit = async (e: React.FormEvent) => {
@@ -103,6 +141,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
       productId: formData.productId,
       name: formData.name,
       description: formData.description,
+      location: formData.location,
       image: imageHash ? `ipfs://${imageHash}` : null,
       certificate: `ipfs://${certHash}`,
       createdAt: new Date().toISOString(),
@@ -133,13 +172,15 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     setUploadProgress(prev => ({ ...prev, metadata: 'success' }));
 
     // 5. Gọi smart contract qua onSubmit prop
-    await onSubmit(formData.productId, formData.name, ipfsHash);
+    await onSubmit(formData.productId, formData.name, ipfsHash, formData.location);
 
     setCreatedId(formData.productId);
+    await generateQRCode(formData.productId);
     setFormData({
       productId: generateProductId(),
       name: '',
       description: '',
+      location: '',
       image: null,
       certificate: null,
     });
@@ -288,6 +329,34 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           <p className="text-green-700">
             Mã sản phẩm: <span className="font-mono font-semibold">{createdId}</span>
           </p>
+          {qrCodeUrl && (
+            <div className="mt-4 p-4 bg-white rounded-lg border">
+              <div className="flex items-center justify-between mb-3">
+                <div className="flex items-center space-x-2">
+                  <QrCode className="w-5 h-5 text-blue-600" />
+                  <span className="font-semibold text-gray-900">QR Code tra cứu</span>
+                </div>
+                <button
+                  onClick={downloadQRCode}
+                  className="flex items-center space-x-2 bg-blue-600 hover:bg-blue-700 text-white px-3 py-2 rounded-lg text-sm transition-colors"
+                >
+                  <Download className="w-4 h-4" />
+                  <span>Tải xuống</span>
+                </button>
+              </div>
+              <div className="text-center">
+                <img 
+                  src={qrCodeUrl} 
+                  alt="QR Code" 
+                  className="mx-auto rounded-lg shadow-sm"
+                  style={{ width: '150px', height: '150px' }}
+                />
+                <p className="text-sm text-gray-600 mt-2">
+                  Quét để tra cứu sản phẩm này
+                </p>
+              </div>
+            </div>
+          )}
         </div>
       )}
 
@@ -336,6 +405,27 @@ export const ProductForm: React.FC<ProductFormProps> = ({
         </div>
 
         <div>
+          <label htmlFor="location" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <MapPin className="w-4 h-4" />
+            <span>Địa điểm sản xuất</span>
+            <span className="text-red-500">*</span>
+          </label>
+          <input
+            type="text"
+            id="location"
+            name="location"
+            value={formData.location}
+            onChange={handleChange}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-blue-500 focus:border-transparent transition-all ${
+              errors.location ? 'border-red-500' : 'border-gray-300'
+            }`}
+            placeholder="Nhập địa điểm sản xuất"
+          />
+          {errors.location && (
+            <p className="text-red-500 text-sm mt-1">{errors.location}</p>
+          )}
+        </div>
+        <div>
           <label htmlFor="description" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <FileText className="w-4 h-4" />
             <span>Mô tả sản phẩm</span>
@@ -358,6 +448,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             icon={Image}
             accept="image/*"
             file={formData.image}
+            required={true}
             uploadStatus={uploadProgress.image}
           />
 
@@ -367,6 +458,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             icon={Award}
             accept="image/*,application/pdf"
             file={formData.certificate}
+            required={true}
             uploadStatus={uploadProgress.certificate}
           />
         </div>
@@ -394,19 +486,6 @@ export const ProductForm: React.FC<ProductFormProps> = ({
           )}
         </button>
       </form>
-
-      {/* IPFS Info */}
-      <div className="mt-6 p-4 bg-purple-50 border border-purple-200 rounded-lg">
-        <h3 className="text-sm font-semibold text-purple-800 mb-2">
-          📡 Thông tin IPFS
-        </h3>
-        <ul className="space-y-1 text-purple-700 text-sm">
-          <li>• Files sẽ được upload lên Pinata IPFS để lưu trữ phi tập trung</li>
-          <li>• Metadata bao gồm thông tin sản phẩm và links đến files</li>
-          <li>• IPFS hash sẽ được lưu trên blockchain để đảm bảo tính bất biến</li>
-          <li>• Cần cấu hình VITE_PINATA_JWT trong environment variables</li>
-        </ul>
-      </div>
     </div>
   );
 };

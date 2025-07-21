@@ -1,9 +1,10 @@
 import React, { useState } from 'react';
-import { MapPin, FileText, Plus } from 'lucide-react';
+import { MapPin, FileText, Plus, Tag } from 'lucide-react';
+import { StepStatus, STEP_STATUS_LABELS } from '../types/contract';
 
 interface AddStepFormProps {
   productId: string;
-  onSubmit: (productId: string, location: string, description: string) => Promise<void>;
+  onSubmit: (productId: string, location: string, description: string, stepStatus: number) => Promise<void>;
   loading: boolean;
   isAuthorized: boolean;
 }
@@ -17,6 +18,7 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
   const [formData, setFormData] = useState({
     location: '',
     description: '',
+    stepStatus: StepStatus.Manufactured,
   });
   const [errors, setErrors] = useState<Record<string, string>>({});
 
@@ -41,15 +43,15 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
     if (!validateForm()) return;
 
     try {
-      await onSubmit(productId, formData.location, formData.description);
-      setFormData({ location: '', description: '' });
+      await onSubmit(productId, formData.location, formData.description, formData.stepStatus);
+      setFormData({ location: '', description: '', stepStatus: StepStatus.Manufactured });
       setErrors({});
     } catch (error) {
       // Error handled by parent component
     }
   };
 
-  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement>) => {
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
     const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
@@ -82,9 +84,8 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
             name="location"
             value={formData.location}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${
-              errors.location ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${errors.location ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Nhập địa điểm thực hiện"
           />
           {errors.location && (
@@ -92,6 +93,25 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
           )}
         </div>
 
+        <div>
+          <label htmlFor="stepStatus" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+            <Tag className="w-4 h-4" />
+            <span>Trạng thái</span>
+          </label>
+          <select
+            id="stepStatus"
+            name="stepStatus"
+            value={formData.stepStatus}
+            onChange={handleChange}
+            className="w-full px-4 py-3 border border-gray-300 rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all"
+          >
+            {Object.entries(STEP_STATUS_LABELS).map(([value, label]) => (
+              <option key={value} value={value}>
+                {label}
+              </option>
+            ))}
+          </select>
+        </div>
         <div>
           <label htmlFor="description" className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
             <FileText className="w-4 h-4" />
@@ -103,9 +123,8 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
             value={formData.description}
             onChange={handleChange}
             rows={4}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none ${
-              errors.description ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none ${errors.description ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Mô tả chi tiết hành động được thực hiện"
           />
           {errors.description && (

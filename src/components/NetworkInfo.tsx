@@ -66,7 +66,7 @@ export const NetworkInfo: React.FC = () => {
   if (!networkInfo) return null;
 
   return (
-    <div className={`flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${
+    <div className={`hidden sm:flex items-center space-x-2 px-3 py-2 rounded-lg text-sm ${
       networkInfo.isSupported 
         ? 'bg-green-50 text-green-800 border border-green-200'
         : 'bg-yellow-50 text-yellow-800 border border-yellow-200'

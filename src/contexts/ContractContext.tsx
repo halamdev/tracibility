@@ -1,5 +1,16 @@
 import React, { createContext, useContext, ReactNode } from 'react';
-import { useContract } from '../hooks/useContract';
+import { useState, useMemo } from 'react';
+import {
+  useConnectWallet,
+  useDisconnectWallet,
+  useCreateProduct,
+  useAddStep,
+  useGetProduct,
+  useGetSteps,
+  useGetProductsByCreator,
+  useAuthorizeUser,
+  useRevokeUser
+} from '../hooks/contract';
 import { WalletState, Product, Step } from '../types/contract';
 
 interface ContractContextType {
@@ -33,10 +44,66 @@ interface ContractProviderProps {
 }
 
 export const ContractProvider: React.FC<ContractProviderProps> = ({ children }) => {
-  const contractHook = useContract();
+  const [walletState, setWalletState] = useState<WalletState>({
+    address: null as string | null,
+    isConnected: false,
+    isAuthorized: false,
+    isOwner: false,
+  });
+  const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
+
+  // Debug contract function (inline, only for connectWallet)
+  const debugContract = async () => {
+    if (!window.ethereum) return false;
+    try {
+      const { ethers } = await import('ethers');
+      const { CONTRACT_ADDRESS, CONTRACT_ABI } = await import('../constants/contract');
+      const provider = new ethers.BrowserProvider(window.ethereum);
+      const code = await provider.getCode(CONTRACT_ADDRESS);
+      if (code === '0x') return false;
+      const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
+      try {
+        await contract.owner();
+        return true;
+      } catch {
+        return false;
+      }
+    } catch {
+      return false;
+    }
+  };
+
+  const connectWallet = useConnectWallet(setWalletState, setLoading, setError, debugContract);
+  const disconnectWallet = useDisconnectWallet(setWalletState);
+  const createProduct = useCreateProduct(walletState, setLoading, setError);
+  const addStep = useAddStep(walletState, setLoading, setError);
+  const getProduct = useGetProduct(setError);
+  const getSteps = useGetSteps(setError);
+  const getProductsByCreator = useGetProductsByCreator(setError);
+  const authorizeUser = useAuthorizeUser(walletState, setLoading, setError);
+  const revokeUser = useRevokeUser(walletState, setLoading, setError);
+
+  const clearError = () => setError(null);
+
+  const contextValue = useMemo(() => ({
+    walletState,
+    loading,
+    error,
+    connectWallet,
+    disconnectWallet,
+    createProduct,
+    addStep,
+    getProduct,
+    getSteps,
+    getProductsByCreator,
+    authorizeUser,
+    revokeUser,
+    clearError,
+  }), [walletState, loading, error, connectWallet, disconnectWallet, createProduct, addStep, getProduct, getSteps, getProductsByCreator, authorizeUser, revokeUser]);
 
   return (
-    <ContractContext.Provider value={contractHook}>
+    <ContractContext.Provider value={contextValue}>
       {children}
     </ContractContext.Provider>
   );

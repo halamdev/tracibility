@@ -40,6 +40,12 @@ export const ProductForm: React.FC<ProductFormProps> = ({
     if (!formData.location.trim()) {
       newErrors.location = 'Địa điểm không được để trống';
     }
+    if (!formData.image) {
+      newErrors.image = 'Hình ảnh sản phẩm là bắt buộc';
+    }
+    if (!formData.certificate) {
+      newErrors.certificate = 'Chứng nhận sản phẩm là bắt buộc';
+    }
     setErrors(newErrors);
     return Object.keys(newErrors).length === 0;
   };
@@ -385,6 +391,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             icon={Image}
             accept="image/*"
             file={formData.image}
+            required={true}
             uploadStatus={uploadProgress.image}
           />
 
@@ -394,6 +401,7 @@ export const ProductForm: React.FC<ProductFormProps> = ({
             icon={Award}
             accept="image/*,application/pdf"
             file={formData.certificate}
+            required={true}
             uploadStatus={uploadProgress.certificate}
           />
         </div>

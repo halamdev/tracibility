@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Search, Shield, Clock, Globe } from 'lucide-react';
+import { Package, Search, Shield, Clock, Globe, List } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 
 export const HomePage: React.FC = () => {
@@ -20,6 +20,13 @@ export const HomePage: React.FC = () => {
       description: 'Tìm kiếm và xem lịch sử truy xuất của bất kỳ sản phẩm nào',
       link: '/search',
       color: 'green',
+    },
+    {
+      icon: List,
+      title: 'Danh sách sản phẩm',
+      description: 'Xem tất cả sản phẩm đã đăng ký trong hệ thống',
+      link: '/products',
+      color: 'orange',
     },
     {
       icon: Shield,

@@ -52,8 +52,7 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
   };
 
   const handleChange = (e: React.ChangeEvent<HTMLInputElement | HTMLTextAreaElement | HTMLSelectElement>) => {
-    const { name, value, type } = e.target;
-    const finalValue = type === 'number' ? parseInt(value) : value;
+    const { name, value } = e.target;
     setFormData(prev => ({ ...prev, [name]: value }));
     if (errors[name]) {
       setErrors(prev => ({ ...prev, [name]: '' }));
@@ -85,9 +84,8 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
             name="location"
             value={formData.location}
             onChange={handleChange}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${
-              errors.location ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all ${errors.location ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Nhập địa điểm thực hiện"
           />
           {errors.location && (
@@ -125,9 +123,8 @@ export const AddStepForm: React.FC<AddStepFormProps> = ({
             value={formData.description}
             onChange={handleChange}
             rows={4}
-            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none ${
-              errors.description ? 'border-red-500' : 'border-gray-300'
-            }`}
+            className={`w-full px-4 py-3 border rounded-lg focus:ring-2 focus:ring-green-500 focus:border-transparent transition-all resize-none ${errors.description ? 'border-red-500' : 'border-gray-300'
+              }`}
             placeholder="Mô tả chi tiết hành động được thực hiện"
           />
           {errors.description && (

@@ -206,8 +206,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               <Package className="w-6 h-6 text-purple-600" />
             </div>
             <h2 className="text-2xl font-bold text-gray-900">Thông tin sản phẩm</h2>
-            <span className={`px-3 py-1 rounded-full text-sm font-medium ${PRODUCT_STATUS_COLORS[product.status]}`}>
-              {PRODUCT_STATUS_LABELS[product.status]}
+            <span className={`px-3 py-1 rounded-full text-sm font-medium ${PRODUCT_STATUS_COLORS[product.status as keyof typeof PRODUCT_STATUS_LABELS]}`}>
+              {PRODUCT_STATUS_LABELS[product.status as keyof typeof PRODUCT_STATUS_LABELS]}
             </span>
           </div>
           <button
@@ -394,8 +394,8 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                   
                   <div className="flex-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
-                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[step.status]}`}>
-                        {STEP_STATUS_LABELS[step.status]}
+                      <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[step.status as keyof typeof STEP_STATUS_COLORS]}`}>
+                        {STEP_STATUS_LABELS[step.status as keyof typeof STEP_STATUS_LABELS]}
                       </span>
                     </div>
 

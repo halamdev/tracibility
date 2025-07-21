@@ -69,19 +69,6 @@ export const CreatePage: React.FC = () => {
         loading={loading}
         isAuthorized={walletState.isAuthorized}
       />
-
-      {/* Tips */}
-      <div className="mt-8 bg-blue-50 border border-blue-200 rounded-lg p-6">
-        <h3 className="text-lg font-semibold text-blue-800 mb-3">
-          💡 Mẹo sử dụng
-        </h3>
-        <ul className="space-y-2 text-blue-700 text-sm">
-          <li>• Mã sản phẩm phải là duy nhất trong hệ thống</li>
-          <li>• IPFS Hash nên chứa metadata, hình ảnh và chứng nhận của sản phẩm</li>
-          <li>• Sau khi tạo, bạn có thể thêm các bước truy xuất trong trang Tra cứu</li>
-          <li>• Tất cả thông tin sẽ được lưu trữ vĩnh viễn trên blockchain</li>
-        </ul>
-      </div>
     </div>
   );
 };

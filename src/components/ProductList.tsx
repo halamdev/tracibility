@@ -1,6 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { useNavigate, useSearchParams } from 'react-router-dom';
-import { Package, Search, Filter, User, Calendar, MapPin, Eye, Plus, Image, QrCode, Download } from 'lucide-react';
+import { Package, Search, Filter, User, Calendar, MapPin, Eye, Plus, Image, QrCode } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 import { Product, STEP_STATUS_LABELS, STEP_STATUS_COLORS } from '../types/contract';
 import { ProductModal } from './ProductModal';

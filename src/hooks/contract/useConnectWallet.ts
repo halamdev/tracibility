@@ -24,10 +24,30 @@ export const useConnectWallet = (setWalletState: (s: WalletState) => void, setLo
         return;
       }
       const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
+      const API_BACKEND = import.meta.env.VITE_API_BACKEND_URL;
       if (accounts.length > 0) {
         const provider = new ethers.BrowserProvider(window.ethereum);
         const contract = new ethers.Contract(CONTRACT_ADDRESS, CONTRACT_ABI, provider);
         const address = accounts[0];
+        // GỌI BACKEND ĐỂ CHECK VÍ HỢP LỆ
+        const token = localStorage.getItem("token");
+        const res = await fetch(`${API_BACKEND}/api/users/auth/wallet-verify`, {
+          method: "POST",
+          headers: {
+            "Content-Type": "application/json",
+            Authorization: `Bearer ${token}`,
+          },
+          body: JSON.stringify({ wallet: address }),
+        });
+
+        const result = await res.json();
+        if (!res.ok || !result.success) {
+          const msg =
+            result.error || "Ví của bạn không khớp với tài khoản hiện tại.";
+          setError(msg);
+          toast.error(msg);
+          return;
+        }
         let isAuthorized = false;
         let isOwner = false;
         try {

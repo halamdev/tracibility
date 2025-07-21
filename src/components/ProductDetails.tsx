@@ -1,5 +1,5 @@
 import React, { useState, useEffect } from 'react';
-import { Package, User, Hash, FileText, Calendar, MapPin, Image, Award, ExternalLink, Download, Eye, EyeOff, Tag, QrCode } from 'lucide-react';
+import { Package, User, Hash, FileText, Calendar, MapPin, Image, Award, ExternalLink, Download, QrCode } from 'lucide-react';
 import { Product, Step, STEP_STATUS_LABELS, STEP_STATUS_COLORS } from '../types/contract';
 import { useNavigate } from 'react-router-dom';
 import QRCode from 'qrcode';
@@ -29,7 +29,6 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   const [metadata, setMetadata] = useState<ProductMetadata | null>(null);
   const [loadingMetadata, setLoadingMetadata] = useState(true);
   const [metadataError, setMetadataError] = useState<string | null>(null);
-  const [showTechnicalInfo, setShowTechnicalInfo] = useState(false);
   const [qrCodeUrl, setQrCodeUrl] = useState<string>('');
   const [showQRCode, setShowQRCode] = useState(false);
 

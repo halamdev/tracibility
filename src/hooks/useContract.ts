@@ -19,6 +19,7 @@ export const useContract = () => {
   });
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const API_BACKEND = import.meta.env.VITE_API_BACKEND_URL;
 
   // Debug function to check contract
   const debugContract = async () => {
@@ -84,7 +85,7 @@ export const useContract = () => {
 
       // GỌI BACKEND ĐỂ CHECK VÍ HỢP LỆ
       const token = localStorage.getItem("token");
-      const res = await fetch("http://localhost:8090/api/users/auth/wallet-verify", {
+      const res = await fetch(`${API_BACKEND}/api/users/auth/wallet-verify`, {
         method: "POST",
         headers: {
           "Content-Type": "application/json",

@@ -423,27 +423,6 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               </div>
             )}
 
-            {/* Technical Info */}
-            {showTechnicalInfo && (
-              <div className="border-t pt-6">
-                <h3 className="text-lg font-semibold text-gray-900 mb-4">Thông tin kỹ thuật</h3>
-                <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">IPFS Hash (Metadata)</label>
-                    <div className="bg-gray-50 px-3 py-2 rounded border font-mono text-sm break-all">
-                      {product.ipfsHash}
-                    </div>
-                  </div>
-                  <div>
-                    <label className="text-sm font-semibold text-gray-700 mb-2 block">Địa chỉ nhà sản xuất</label>
-                    <div className="bg-gray-50 px-3 py-2 rounded border font-mono text-sm">
-                      {product.creator}
-                    </div>
-                  </div>
-                </div>
-              </div>
-            )}
-
             {/* Stats */}
             <div className="bg-gradient-to-r from-blue-50 to-purple-50 rounded-lg p-4 border border-blue-200">
               <p className="text-blue-800 font-semibold">

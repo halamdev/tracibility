@@ -248,7 +248,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
               </span>
             ) : (
               <span className="px-3 py-1 rounded-full text-sm font-medium bg-gray-100 text-gray-500">
-                Chưa có bước truy xuất
+                Chưa cập nhật
               </span>
             )}
           </div>

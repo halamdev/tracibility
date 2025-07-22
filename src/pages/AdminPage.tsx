@@ -154,7 +154,7 @@ export const AdminPage: React.FC = () => {
         <div>
           <button
             onClick={() => {
-              setEditingUser({ user_name: '', password: '', user_role: 'USER', wallet_address: '' });
+              setEditingUser({ user_name: '', password: '', user_role: 'ADMIN', wallet_address: '' });
               setShowModal(true);
             }}
             className="inline-flex items-center gap-2 bg-blue-600 hover:bg-blue-700 text-white font-semibold px-5 py-2 rounded shadow mb-4"
@@ -264,10 +264,10 @@ export const AdminPage: React.FC = () => {
                 onChange={(e) => setEditingUser({ ...editingUser, user_role: e.target.value })}
                 className="w-full px-3 py-2 border rounded focus:ring-2 focus:ring-blue-400 outline-none"
               >
+                <option value="ADMIN">Quản trị viên</option>
                 <option value="Manufacturers">Nhà sản xuất</option>
                 <option value="Distributors">Nhà phân phối</option>
                 <option value="Retailers">Nhà bán lẻ</option>
-                <option value="ADMIN">Quản trị viên</option>
               </select>
 
               <div className="flex justify-end space-x-3 pt-2">

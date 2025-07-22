@@ -1,6 +1,6 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
-import { Package, Search, Shield, Clock, Globe, List } from 'lucide-react';
+import { Package, Search, Shield, List } from 'lucide-react';
 import { useContractContext } from '../contexts/ContractContext';
 
 export const HomePage: React.FC = () => {

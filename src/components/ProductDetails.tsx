@@ -46,7 +46,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
     const cleanHash = hash.replace('ipfs://', '');
     return `https://gateway.pinata.cloud/ipfs/${cleanHash}`;
   };
-  
+
   const generateQRCode = async () => {
     try {
       const url = `${window.location.origin}/search?id=${productId}`;
@@ -84,7 +84,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
 
       const metadataUrl = getIpfsUrl(product.ipfsHash);
       const response = await fetch(metadataUrl);
-      
+
       if (!response.ok) {
         throw new Error('Không thể tải metadata từ IPFS');
       }
@@ -139,89 +139,89 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
   };
 
   const CertificateViewer: React.FC<{ src: string }> = ({ src }) => {
-  const [isPdf, setIsPdf] = useState<boolean | null>(null);
-  const [loading, setLoading] = useState(true);
+    const [isPdf, setIsPdf] = useState<boolean | null>(null);
+    const [loading, setLoading] = useState(true);
 
-  const url = src.startsWith('http') ? src : getIpfsUrl(src);
+    const url = src.startsWith('http') ? src : getIpfsUrl(src);
 
-  useEffect(() => {
-    const checkFileType = async () => {
-      try {
-        const response = await fetch(url, { method: 'HEAD' });
-        const contentType = response.headers.get('Content-Type');
-        console.log('📄 Content-Type:', contentType);
-        if (contentType?.includes('pdf')) {
-          setIsPdf(true);
-        } 
-        else {
-          setIsPdf(false);
+    useEffect(() => {
+      const checkFileType = async () => {
+        try {
+          const response = await fetch(url, { method: 'HEAD' });
+          const contentType = response.headers.get('Content-Type');
+          console.log('📄 Content-Type:', contentType);
+          if (contentType?.includes('pdf')) {
+            setIsPdf(true);
+          }
+          else {
+            setIsPdf(false);
+          }
+        } catch (err) {
+          console.error('Lỗi kiểm tra Content-Type:', err);
+          setIsPdf(false); // fallback nếu lỗi
+        } finally {
+          setLoading(false);
         }
-      } catch (err) {
-        console.error('Lỗi kiểm tra Content-Type:', err);
-        setIsPdf(false); // fallback nếu lỗi
-      } finally {
-        setLoading(false);
-      }
-    };
+      };
 
-    checkFileType();
-  }, [url]);
+      checkFileType();
+    }, [url]);
 
-  if (loading) {
+    if (loading) {
+      return (
+        <div className="flex justify-center items-center py-8">
+          <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
+          <span className="ml-3 text-gray-600">Đang kiểm tra định dạng chứng chỉ...</span>
+        </div>
+      );
+    }
+
     return (
-      <div className="flex justify-center items-center py-8">
-        <div className="w-6 h-6 border-2 border-red-600 border-t-transparent rounded-full animate-spin"></div>
-        <span className="ml-3 text-gray-600">Đang kiểm tra định dạng chứng chỉ...</span>
+      <div className="space-y-4">
+        {isPdf ? (
+          <div className="bg-red-50 border border-red-200 rounded-lg p-6">
+            <div className="text-center mb-4">
+              <Award className="w-12 h-12 mx-auto text-red-600 mb-3" />
+              <h4 className="font-semibold text-red-800 mb-2">Chứng chỉ PDF</h4>
+              <p className="text-red-700 text-sm">Xem trước chứng chỉ PDF bên dưới hoặc tải xuống</p>
+            </div>
+
+            <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
+              <iframe
+                src={url}
+                title="PDF Viewer"
+                width="100%"
+                height="100%"
+                className="w-full h-full"
+              />
+            </div>
+
+            <div className="flex justify-center space-x-3 mt-4">
+              <a
+                href={url}
+                target="_blank"
+                rel="noopener noreferrer"
+                className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <ExternalLink className="w-4 h-4" />
+                <span>Xem PDF trong tab mới</span>
+              </a>
+              <a
+                href={url}
+                download
+                className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
+              >
+                <Download className="w-4 h-4" />
+                <span>Tải xuống</span>
+              </a>
+            </div>
+          </div>
+        ) : (
+          <ImageViewer src={src} alt="Chứng chỉ sản phẩm" />
+        )}
       </div>
     );
-  }
-
-  return (
-    <div className="space-y-4">
-      {isPdf ? (
-        <div className="bg-red-50 border border-red-200 rounded-lg p-6">
-          <div className="text-center mb-4">
-            <Award className="w-12 h-12 mx-auto text-red-600 mb-3" />
-            <h4 className="font-semibold text-red-800 mb-2">Chứng chỉ PDF</h4>
-            <p className="text-red-700 text-sm">Xem trước chứng chỉ PDF bên dưới hoặc tải xuống</p>
-          </div>
-
-          <div className="border rounded-lg overflow-hidden" style={{ height: '600px' }}>
-            <iframe
-              src={url}
-              title="PDF Viewer"
-              width="100%"
-              height="100%"
-              className="w-full h-full"
-            />
-          </div>
-
-          <div className="flex justify-center space-x-3 mt-4">
-            <a
-              href={url}
-              target="_blank"
-              rel="noopener noreferrer"
-              className="flex items-center space-x-2 bg-red-600 hover:bg-red-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              <ExternalLink className="w-4 h-4" />
-              <span>Xem PDF trong tab mới</span>
-            </a>
-            <a
-              href={url}
-              download
-              className="flex items-center space-x-2 bg-gray-600 hover:bg-gray-700 text-white px-4 py-2 rounded-lg transition-colors"
-            >
-              <Download className="w-4 h-4" />
-              <span>Tải xuống</span>
-            </a>
-          </div>
-        </div>
-      ) : (
-        <ImageViewer src={src} alt="Chứng chỉ sản phẩm" />
-      )}
-    </div>
-  );
-};
+  };
 
   // Lấy step status mới nhất
   const getLatestStepStatus = () => {
@@ -309,17 +309,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                   </label>
                   <p className="bg-gray-50 px-4 py-3 rounded-lg border">{metadata.location || product.location}</p>
                 </div>
-                {metadata.description && (
-                  <div>
-                    <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
-                      <FileText className="w-4 h-4" />
-                      <span>Mô tả</span>
-                    </label>
-                    <div className="bg-gray-50 px-4 py-3 rounded-lg border">
-                      <p className="text-gray-900 whitespace-pre-wrap">{metadata.description}</p>
-                    </div>
-                  </div>
-                )}
+
 
                 <div>
                   <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
@@ -374,9 +364,9 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                   <div className="bg-gray-50 rounded-lg p-4 text-center">
                     {qrCodeUrl ? (
                       <div className="space-y-3">
-                        <img 
-                          src={qrCodeUrl} 
-                          alt="QR Code" 
+                        <img
+                          src={qrCodeUrl}
+                          alt="QR Code"
                           className="mx-auto rounded-lg shadow-sm"
                           style={{ width: '200px', height: '200px' }}
                         />
@@ -403,7 +393,17 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                 </div>
               )}
             </div>
-
+            {metadata.description && (
+              <div>
+                <label className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
+                  <FileText className="w-4 h-4" />
+                  <span>Mô tả</span>
+                </label>
+                <div className="bg-gray-50 px-4 py-3 rounded-lg border">
+                  <p className="text-gray-900 whitespace-pre-wrap">{metadata.description}</p>
+                </div>
+              </div>
+            )}
             {/* Certificate */}
             {metadata.certificate && (
               <div>
@@ -452,12 +452,12 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                 {index !== steps.length - 1 && (
                   <div className="absolute left-6 top-16 w-0.5 h-20 bg-gradient-to-b from-blue-400 to-purple-400"></div>
                 )}
-                
+
                 <div className="flex items-start space-x-4">
                   <div className="flex-shrink-0 w-12 h-12 bg-gradient-to-br from-blue-500 to-purple-600 rounded-full flex items-center justify-center text-white font-bold shadow-lg">
                     {index + 1}
                   </div>
-                  
+
                   <div className="flex-1 bg-gradient-to-r from-gray-50 to-gray-100 rounded-xl p-6 border border-gray-200 shadow-sm">
                     <div className="flex items-center justify-between mb-4">
                       <span className={`px-3 py-1 rounded-full text-sm font-medium ${STEP_STATUS_COLORS[step.status as keyof typeof STEP_STATUS_COLORS]}`}>
@@ -473,7 +473,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                         </div>
                         <p className="text-gray-900 font-medium text-lg">{step.location}</p>
                       </div>
-                      
+
                       <div>
                         <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                           <Calendar className="w-4 h-4 text-green-600" />
@@ -482,7 +482,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                         <p className="text-gray-900 font-medium">{formatTimestamp(step.timestamp)}</p>
                       </div>
                     </div>
-                    
+
                     <div className="mb-4">
                       <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-2">
                         <FileText className="w-4 h-4 text-purple-600" />
@@ -492,7 +492,7 @@ export const ProductDetails: React.FC<ProductDetailsProps> = ({
                         <p className="text-gray-900 leading-relaxed">{step.description}</p>
                       </div>
                     </div>
-                    
+
                     <div className="pt-4 border-t border-gray-300">
                       <div className="flex items-center space-x-2 text-sm font-semibold text-gray-700 mb-1">
                         <User className="w-4 h-4 text-orange-600" />

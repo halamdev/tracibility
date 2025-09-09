@@ -56,13 +56,13 @@ export const WalletConnection: React.FC<WalletConnectionProps> = ({
           </span>
         )}
       </div>
-      <button
+      {/* <button
         onClick={onDisconnect}
         className="flex items-center space-x-1 sm:space-x-2 bg-gray-100 hover:bg-gray-200 text-gray-700 px-2 sm:px-4 py-2 rounded-lg font-medium transition-colors text-sm sm:text-base"
       >
         <LogOut className="w-4 h-4" />
         <span className="hidden sm:inline">Ngắt kết nối</span>
-      </button>
+      </button> */}
     </div>
   );
 };
